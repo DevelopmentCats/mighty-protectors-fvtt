@@ -386,8 +386,8 @@ export default class MPActor extends Actor {
                             );
 
                             ChatMessage.create({
-                                type: CONST.CHAT_MESSAGE_STYLES.ROLL,
-                                roll: roll,
+                                style: CONST.CHAT_MESSAGE_STYLES.ROLL,
+                                rolls: [roll],
                                 content: cardContent,
                                 speaker: ChatMessage.getSpeaker({ actor: this })
                             });
@@ -503,8 +503,8 @@ export default class MPActor extends Actor {
                 msg += await roll.render();
                 msg += hpRecovered;
                 chatOptions = {
-                    type: CONST.CHAT_MESSAGE_STYLES.ROLL,
-                    roll: roll,
+                    style: CONST.CHAT_MESSAGE_STYLES.ROLL,
+                    rolls: [roll],
                     content: msg,
                     speaker: ChatMessage.getSpeaker({ actor: this })
                 };

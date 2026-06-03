@@ -34,8 +34,8 @@ export async function RollForCritFumble(data) {
     let cardContent = await renderTemplate(messageTemplate, rollData);
 
     let messageData = {
-        type: CONST.CHAT_MESSAGE_STYLES.ROLL,
-        roll: roll,
+        style: CONST.CHAT_MESSAGE_STYLES.ROLL,
+        rolls: [roll],
         speaker: ChatMessage.getSpeaker(),
         content: cardContent
     };
@@ -55,7 +55,7 @@ export async function RollCritFumbleType(data) {
         // just roll a d20
         const roll = new Roll("1d20");
         await roll.toMessage({
-            type: CONST.CHAT_MESSAGE_STYLES.ROLL,
+            style: CONST.CHAT_MESSAGE_STYLES.ROLL,
             speaker: ChatMessage.getSpeaker(),
             flavor: ((data.rollType === "crit") ?  game.i18n.localize("MP.RollsCritSuccess") : game.i18n.localize("MP.RollsCritFailure")) + ":"
         });

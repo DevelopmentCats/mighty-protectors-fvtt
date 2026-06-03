@@ -366,8 +366,8 @@ export default class MPItem extends Item {
                 let cardContent = await renderTemplate("systems/mighty-protectors/templates/chatcards/attackroll.hbs", rollData);
 
                 let chatOptions = {
-                    type: CONST.CHAT_MESSAGE_STYLES.ROLL,
-                    roll: roll,
+                    style: CONST.CHAT_MESSAGE_STYLES.ROLL,
+                    rolls: [roll],
                     content: cardContent,
                     speaker: ChatMessage.getSpeaker({ actor: actor })
                 };
@@ -387,7 +387,7 @@ export default class MPItem extends Item {
                     }
                 }
 
-                if (spendCharges && itemData.system.usecharges) {
+                if (spendCharges && itemData.usecharges) {
                     let newCharges = chargeSource.system.chargesused -1;
                     if (newCharges < 0) newCharges = 0;
                     await chargeSource.update({"system.chargesused": newCharges});

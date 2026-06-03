@@ -35,7 +35,7 @@
   "primaryTokenAttribute": "health",
   "secondaryTokenAttribute": "power",
   "compatibility": {
-    "minimum": 12,
+    "minimum": "12",
     "verified": "14"
   }
 }
