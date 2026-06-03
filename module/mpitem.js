@@ -33,122 +33,18 @@ export default class MPItem extends Item {
         }
     }
 
+    /**
+     * @override
+     * Item-level prepareDerivedData - just calls super which triggers TypeDataModel.prepareDerivedData()
+     * The actual derived data logic is now in the TypeDataModel classes in item-models.js
+     */
     prepareDerivedData() {
         super.prepareDerivedData();
-
-        if (this.type === 'movement') this._prepareDerivedMovementData();
-        if (this.type === 'attack') this._prepareDerivedAttackData();
-        if (this.type === 'vehiclesystem') this._prepareDerivedVehicleSystemData();
-        if (this.type === 'vehicleattack') this._prepareDerivedVehicleAttackData();
     }
 
-
-    async _prepareDerivedMovementData() {
-        const itemData = this.system;
-        const actorData = this.actor ? this.actor.system : null;
-
-        // don't bother unless the move item is attached to a character, is set to constant rate type, and not set to manual entry
-        if (itemData.moverateformula == "manual") {
-            this.system.calcmoverate = this.system.moverate;
-        }
-        else if (actorData && (itemData.moveratetype === "constant")) {
-
-            let rate = 0;
-
-            if (itemData.moverateformula === "ground") {
-                rate = (
-                    (
-                        (actorData.basecharacteristics.st.value + actorData.basecharacteristics.ag.value + actorData.basecharacteristics.en.value)
-                        / 3
-                    ) - .5
-                );
-
-                rate = Math.round(rate);
-            }
-            else if (itemData.moverateformula === "leaping") {
-                if (actorData.weight > 0) {
-                    rate = actorData.carry / actorData.weight;
-                    rate = Math.round(rate * 100) / 100;
-                }
-            }
-
-            this.system.calcmoverate = rate;
-        }
-    }
-
-    _prepareDerivedAttackData() {
-        const itemData = this.system;
-        const actorData = this.actor ? this.actor.system : null;
-
-        if (actorData) {
-
-            // first get save for appropriate stat
-            let toHit = 3;
-            switch (itemData.attribute) {
-                case "AG":
-                    toHit += actorData.basecharacteristics.ag.save;
-                    break;
-                case "IN":
-                    toHit += actorData.basecharacteristics.in.save;
-                    break;
-                case "CL":
-                    toHit += actorData.basecharacteristics.cl.save;
-                    break;
-            }
-
-            toHit += getCharAblityToHitBonus(this.actor.items, itemData.bonusids);
-            itemData.tohit = toHit;
-        }
-    }
-
-
-    _prepareDerivedVehicleAttackData() {
-        const itemData = this.system;
-        const actorData = this.actor ? this.actor.system : null;
-
-        if (actorData) {
-            // then calc selected bonuses from abilities
-            const items = this.actor.items;
-            const bonusids = itemData.bonusids;
-            let totalbonus = 0;
-
-            if (bonusids) {
-                for (let i of items) {
-                    if (i.type === 'vehiclesystem' && i.system.tohitbonus && bonusids.includes(i.id)) {
-                        totalbonus += i.system.tohitbonus;
-                    }
-                }
-            }
-          
-            itemData.tohitbonus = totalbonus;
-        }
-    }
-
-    async _prepareDerivedVehicleSystemData() {
-        const itemData = this.system;
-
-        if (itemData.systemspaces) {
-            const vehSysList = MP.VehicleSystemsTable.filter(tableRow => (tableRow.spaces <= itemData.systemspaces));
-            const vehSysData = vehSysList[vehSysList.length -1];
-
-            let cps = vehSysData.cps;
-
-            if (itemData.open) {
-                const openSysList = MP.VehicleSystemsTable.filter(tableRow => (tableRow.spaces <= itemData.systemspaces/4));
-                const openSysData = openSysList[openSysList.length -1];
-                cps = openSysData.cps;
-            }
-
-            let hitsBonus = 0;
-            hitsBonus += itemData.bulky ? Math.ceil((itemData.bulky/2.5)*4.3) : 0;
-            hitsBonus -= itemData.delicate ? Math.ceil((itemData.delicate/2.5)*4.3) : 0;
-
-            itemData.profile = vehSysData.profile;
-            itemData.hits = vehSysData.hits + hitsBonus;
-            itemData.points = itemData.integral ? Math.ceil(cps/2) : cps;
-        }
-    }
-
+    /**
+     * Roll an attack with this item
+     */
     async rollAttack() {
         const actor = this.actor;
         const itemName = this.name;

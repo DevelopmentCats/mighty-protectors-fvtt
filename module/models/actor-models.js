@@ -10,6 +10,9 @@
  *    (declared here so templates can always access them)
  */
 
+import { MP } from '../config.js';
+import { simplifyDice } from '../utility.js';
+
 const { fields } = foundry.data;
 
 // ─── Shared field builders ────────────────────────────────────────────────────
@@ -87,9 +90,77 @@ export class CharacterDataModel extends foundry.abstract.TypeDataModel {
             gear:            new fields.ObjectField({ required: false, nullable: true, initial: null })
         };
     }
+
+    /** @override */
+    prepareDerivedData() {
+        // `this` IS `actor.system`
+        // `this.parent` IS the actor document
+
+        const abilityBonuses = this.parent.getAbilityBonuses();
+        this.parent.prepareCharacterBaseAttributes(abilityBonuses);
+        const statData = this.parent.getStatData();
+
+        // Set saves from stat table
+        this.basecharacteristics.en.save = statData.en.save;
+        this.basecharacteristics.ag.save = statData.ag.save;
+        this.basecharacteristics.in.save = statData.in.save;
+        this.basecharacteristics.cl.save = statData.cl.save;
+
+        // Derived fields
+        this.multiinit = abilityBonuses.multiinit;
+        this.carry = statData.st.carry;
+        this.hth = statData.st.hth_init;
+        this.mass = this.parent.getMassRoll(this.weight);
+
+        this.stat_cp =
+            this.basecharacteristics.st.cp +
+            this.basecharacteristics.en.cp +
+            this.basecharacteristics.ag.cp +
+            this.basecharacteristics.in.cp +
+            this.basecharacteristics.cl.cp;
+
+        this.ability_cp = abilityBonuses.cpcost;
+        this.total_cp = abilityBonuses.cpcost + this.stat_cp;
+        this.avail_ip = Math.ceil(this.basecharacteristics.in.value / 2) + abilityBonuses.ip;
+        this.used_ip = abilityBonuses.ipcost;
+        this.spent_xp = this.total_cp - this.base_cp;
+
+        // Caps
+        this.caps = {};
+        this.caps.bcs = Math.floor((this.total_cp / 5) + 10);
+        this.caps.ability = Math.floor(this.total_cp / 5);
+        this.caps.dmg = Math.floor((this.total_cp / 12.5) + 3);
+
+        // Gear caps
+        this.gear = {};
+        this.gear.break = Math.floor((this.total_cp / 25) + 5);
+        this.gear.take = Math.floor((this.total_cp / 25) + 6);
+        this.gear.disarm = Math.floor((this.total_cp / 25) + 3);
+        this.gear.gbc = Math.floor((this.total_cp / 15) + 6);
+
+        // Clearance
+        this.clearance = this.basecharacteristics.in.save + this.basecharacteristics.cl.save + (this.earned_xp / 5) - 20;
+        if (this.clearance < 1) this.clearance = 1;
+        if (this.clearance > 20) this.clearance = 20;
+
+        // Combat stats
+        this.luck = 10 + abilityBonuses.luck;
+        this.healing = statData.en.heal;
+        this.physicaldefense = (this.basecharacteristics.ag.save - 10) + abilityBonuses.physdef;
+        this.mentaldefense = (this.basecharacteristics.in.save - 10) + abilityBonuses.mentdef;
+        this.initiative = simplifyDice(statData.cl.hth_init + " + " + abilityBonuses.init);
+
+        // Resource maximums
+        this.hitpts.max = statData.st.hits_st + statData.ag.hits_ag + statData.en.hits_en + statData.cl.hits_cl + abilityBonuses.hp;
+        this.power.max = this.basecharacteristics.st.value +
+            this.basecharacteristics.ag.value +
+            this.basecharacteristics.en.value +
+            this.basecharacteristics.in.value +
+            abilityBonuses.power;
+    }
 }
 
-// ─── NPCDataModel (same schema as character) ──────────────────────────────────
+// ─── NPCDataModel (same schema and logic as character) ────────────────────────
 
 export class NPCDataModel extends CharacterDataModel {}
 
@@ -128,5 +199,71 @@ export class VehicleDataModel extends foundry.abstract.TypeDataModel {
             total_cp:      new fields.NumberField({ required: false, nullable: true, initial: null }),
             travelrates:   new fields.ObjectField({ required: false, nullable: true, initial: null })
         };
+    }
+
+    /** @override */
+    prepareDerivedData() {
+        // `this` IS `actor.system`
+        // `this.parent` IS the actor document
+
+        const adjustedCost = this.basic_cost + (this.is_base ? 15 : 0);
+
+        const vehList = MP.VehicleTable.filter(tableRow => (tableRow.cps <= adjustedCost));
+        const vehTableData = vehList[vehList.length - 1];
+        const vehicleSystemBonuses = this.parent.getVehicleSystemBonuses();
+
+        this.spaces = vehTableData.spaces;
+        this.weight = vehTableData.weight;
+        this.mass = vehTableData.mass;
+        this.profile = vehTableData.profile;
+
+        // Base characteristics from vehicle table + system bonuses
+        this.basecharacteristics.st.value = vehTableData.st + vehicleSystemBonuses.stbonus;
+        this.basecharacteristics.en.value = vehTableData.en + vehicleSystemBonuses.enbonus;
+        this.basecharacteristics.ag.value = 9 + vehicleSystemBonuses.agbonus;
+        this.basecharacteristics.in.value = 0 + vehicleSystemBonuses.inbonus;
+        this.basecharacteristics.cl.value = 9 + vehicleSystemBonuses.clbonus;
+
+        this.turnrate = 3 + vehicleSystemBonuses.maneuverability;
+
+        // Resource maximums
+        this.hitpts.max = vehTableData.hits + vehicleSystemBonuses.hpbonus;
+        this.power.max = (this.basecharacteristics.st.value || 0) +
+            (this.basecharacteristics.en.value || 0) +
+            (this.basecharacteristics.ag.value || 0) +
+            (this.basecharacteristics.in.value || 0) +
+            vehicleSystemBonuses.powerbonus;
+
+        // Explosion data
+        const exploD8s = 1 + Math.floor(adjustedCost / 5);
+        const exploD4s = (adjustedCost % 5) ? 1 : 0;
+        this.explosion = exploD8s + "d8" + (exploD4s ? "+1d4" : "");
+        this.explosionarea = (2 * Math.floor(vehTableData.profile / 2)) + 1;
+
+        // Get stat data for saves
+        const statData = this.parent.getStatData();
+        this.basecharacteristics.en.save = statData.en.save;
+        this.basecharacteristics.ag.save = statData.ag.save;
+        this.handling = statData.ag.save - 10;
+        this.basecharacteristics.in.save = statData.in.save;
+        this.basecharacteristics.cl.save = statData.cl.save;
+
+        this.hth = statData.st.hth_init;
+        this.initiative = statData.cl.hth_init;
+
+        this.spacesLeft = vehTableData.spaces - vehicleSystemBonuses.systemspaces;
+        this.total_cp = vehicleSystemBonuses.cpcost;
+
+        // Travel rates
+        this.travelrates = {};
+        if (this.firstaccel > 0 && this.inchesperhex > 0) {
+            const baseRate = this.firstaccel / this.turnrate / this.inchesperhex;
+            this.travelrates.accel1 = Math.round(baseRate);
+            this.travelrates.accel2 = Math.round(baseRate * 2);
+            this.travelrates.speednormalmax = Math.round(baseRate * 4);
+            this.travelrates.speedpushedmax = Math.round(baseRate * 8);
+            this.travelrates.flightnormalmax = Math.round(baseRate * 16);
+            this.travelrates.flightpushedmax = Math.round(baseRate * 32);
+        }
     }
 }

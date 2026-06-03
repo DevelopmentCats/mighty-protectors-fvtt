@@ -51,11 +51,19 @@ Hooks.once("init", function() {
         rollOtherStat: Macros.rollOtherMacro
     }
 
-    Items.unregisterSheet("core", ItemSheet);
-    Items.registerSheet(game.system.id, MightyProtectorsItemSheet, {makeDefault: true });
+    // Register item sheet (V2 API)
+    DocumentSheetConfig.unregisterSheet(Item, "core", ItemSheet);
+    DocumentSheetConfig.registerSheet(Item, game.system.id, MightyProtectorsItemSheet, {
+        makeDefault: true,
+        label: "MP.ItemSheet"
+    });
 
-    Actors.unregisterSheet("core", ActorSheet);
-    Actors.registerSheet(game.system.id, MightyProtectorsCharacterSheet, {makeDefault: true });
+    // Register actor sheet (V2 API)
+    DocumentSheetConfig.unregisterSheet(Actor, "core", ActorSheet);
+    DocumentSheetConfig.registerSheet(Actor, game.system.id, MightyProtectorsCharacterSheet, {
+        makeDefault: true,
+        label: "MP.CharacterSheet"
+    });
 });
 
 Hooks.once("ready", function() {
