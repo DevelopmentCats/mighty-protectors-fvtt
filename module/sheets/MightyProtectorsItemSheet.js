@@ -29,21 +29,23 @@ export default class MightyProtectorsItemSheet extends ItemSheet {
 
     async getData(options) {
         const baseData = super.getData();
-        const isOwned = (baseData.item.actor !== null);
+        const isOwned = (this.item.actor !== null);
+
+        // Use live item instance so derived fields from prepareDerivedData() are present.
         let sheetData = {
             owner: this.item.isOwner,
             editable: this.isEditable,
-            item: baseData.item,
-            system: baseData.item.system,
+            item: this.item,
+            system: this.item.system,
             isowned: isOwned,
             config: CONFIG.MP
         };
-        sheetData.itemType = game.i18n.localize(`ITEM.Type${sheetData.item.type.titleCase()}`);
+        sheetData.itemType = game.i18n.localize(`ITEM.Type${this.item.type.titleCase()}`);
         sheetData.enrichedRules = await TextEditor.enrichHTML(this.item.system.rules);
 
-
         if (isOwned) {
-            this._prepareItems(sheetData, baseData.item.actor.items);
+            // Pass live item instances so derived data is accessible in templates.
+            this._prepareItems(sheetData, this.item.actor.items);
         }
         return sheetData;
     }

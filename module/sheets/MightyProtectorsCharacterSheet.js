@@ -20,10 +20,16 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
 
     async getData(options) {
         const sheetData = super.getData(options);
-        const actorData = this.actor.toObject(false);
-        sheetData.actor = actorData;
-        sheetData.system = actorData.system;
-        sheetData.enrichedStory = await TextEditor.enrichHTML(actorData.system.story);
+
+        // Use the live actor instance (not toObject) so derived fields from
+        // prepareDerivedData() are available to Handlebars templates.
+        sheetData.actor = this.actor;
+        sheetData.system = this.actor.system;
+        sheetData.enrichedStory = await TextEditor.enrichHTML(this.actor.system.story);
+
+        // Replace serialized items from super.getData() with live item instances
+        // so their derived fields (tohit, calcmoverate, profile, etc.) are present.
+        sheetData.items = this.actor.items.map(i => i);
 
         switch(this.actor.type) {
             case "npc":
