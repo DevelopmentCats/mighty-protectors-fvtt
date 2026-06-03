@@ -3,7 +3,7 @@ import { MP } from "../config.js";
 
 export default class MightyProtectorsCharacterSheet extends ActorSheet {
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             classes: ["mightyprotectors", "sheet", "character"],
             tabs: [{ navSelector: ".sheet-navigation", contentSelector: ".sheet-body", initial: "stats" }]
         });
@@ -23,7 +23,7 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
         const actorData = this.actor.toObject(false);
         sheetData.actor = actorData;
         sheetData.system = actorData.system;
-        sheetData.enrichedStory = await TextEditor.enrichHTML(actorData.system.story, {async: true});
+        sheetData.enrichedStory = await TextEditor.enrichHTML(actorData.system.story);
 
         switch(this.actor.type) {
             case "npc":
@@ -77,7 +77,7 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
 
         // iterate through items & allocate to containers
         for (let i of sheetData.items) {
-            i.img = i.img || DEFAULT_TOKEN;
+            i.img = i.img || "icons/svg/mystery-man.svg";
 
             if (i.type === 'ability') {
                 abilities.push(i);
@@ -358,6 +358,7 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
 
         let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/rest.hbs", data);
 
+        // TODO: Migrate to DialogV2 (Dialog is deprecated in Foundry v13+)
         let dlg = new Dialog({
             title: game.i18n.localize("MP.Rest"),
             content: dlgContent,
@@ -400,7 +401,7 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
         let element = event.currentTarget;
         let itemId = element.closest(".item").dataset.itemId;
         let item = this.actor.items.get(itemId);
-        return item.update({ 'data.dmg': Number(element.value) });
+        return item.update({ 'system.dmg': Number(element.value) });
     }
 }
 

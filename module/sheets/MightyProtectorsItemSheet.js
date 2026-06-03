@@ -16,7 +16,7 @@ export default class MightyProtectorsItemSheet extends ItemSheet {
 
 
     static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
+        return foundry.utils.mergeObject(super.defaultOptions, {
             height: 350,
             classes: ["mightyprotectors", "sheet", "item"],
             tabs: [{ navSelector: ".sheet-navigation", contentSelector: ".sheet-body", initial: "description" }]
@@ -39,7 +39,7 @@ export default class MightyProtectorsItemSheet extends ItemSheet {
             config: CONFIG.MP
         };
         sheetData.itemType = game.i18n.localize(`ITEM.Type${sheetData.item.type.titleCase()}`);
-        sheetData.enrichedRules = await TextEditor.enrichHTML(this.item.system.rules, {async: true});
+        sheetData.enrichedRules = await TextEditor.enrichHTML(this.item.system.rules);
 
 
         if (isOwned) {
@@ -150,7 +150,7 @@ export default class MightyProtectorsItemSheet extends ItemSheet {
         if (!bonusids.includes(dataset.itemid)) {
             bonusids.push(dataset.itemid);
 
-            await this.item.update({ 'data.bonusids': bonusids });
+            await this.item.update({ 'system.bonusids': bonusids });
             this.item._prepareDerivedAttackData();
         }
 
@@ -170,7 +170,7 @@ export default class MightyProtectorsItemSheet extends ItemSheet {
             });
 
 
-            await this.item.update({ 'data.bonusids': bonusids });
+            await this.item.update({ 'system.bonusids': bonusids });
             this.item._prepareDerivedAttackData();
         }
         return;

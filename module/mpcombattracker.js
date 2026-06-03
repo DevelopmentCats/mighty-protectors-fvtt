@@ -1,3 +1,7 @@
+// TODO: CombatTracker was migrated to ApplicationV2 in Foundry v14.
+// The current implementation (get template, activateListeners, getData) uses the
+// legacy Application pattern which works via the compatibility shim in v13/v14.
+// A full ApplicationV2 rewrite is required for native v14+ support.
 export default class MPCombatTracker extends CombatTracker {
     get template() {
         return `systems/mighty-protectors/templates/system/combat-tracker.hbs`;

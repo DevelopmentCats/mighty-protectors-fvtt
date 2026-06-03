@@ -189,6 +189,7 @@ export default class MPItem extends Item {
 
         let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/attackmods.hbs", dlgData);
 
+        // TODO: Migrate to DialogV2 (Dialog is deprecated in Foundry v13+)
         let dlg = new Dialog({
             title: game.i18n.localize("ITEM.TypeAttack") + ": " + itemName,
             content: dlgContent,
@@ -301,10 +302,10 @@ export default class MPItem extends Item {
                     powerCost += 2;
                 }
 
-                let attackRoll = await new Roll("1d20").evaluate({ async: true });
+                let attackRoll = await new Roll("1d20").evaluate();
                 attackRoll.dice[0].options.rollOrder = 1;
 
-                let dmgRoll = await new Roll(dmgFormula).evaluate({ async: true });
+                let dmgRoll = await new Roll(dmgFormula).evaluate();
                 dmgRoll.dice[0].options.rollOrder = 2;
 
                 const rolls = [attackRoll, dmgRoll];
@@ -364,7 +365,7 @@ export default class MPItem extends Item {
                 let cardContent = await renderTemplate("systems/mighty-protectors/templates/chatcards/attackroll.hbs", rollData);
 
                 let chatOptions = {
-                    type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+                    type: CONST.CHAT_MESSAGE_STYLES.ROLL,
                     roll: roll,
                     content: cardContent,
                     speaker: ChatMessage.getSpeaker({ actor: actor })

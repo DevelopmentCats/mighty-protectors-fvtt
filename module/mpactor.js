@@ -45,10 +45,10 @@ export default class MPActor extends Actor {
 
             const newItem = await this.createEmbeddedDocuments("Item", [protIitem.toObject()]);
 
-            await newItem[0].update({ 'data.kinetic': 3,
-                'data.energy': 3,
-                'data.bio': 3,
-                'data.entropy': 3
+            await newItem[0].update({ 'system.kinetic': 3,
+                'system.energy': 3,
+                'system.bio': 3,
+                'system.entropy': 3
             });
         }
     }
@@ -341,6 +341,7 @@ export default class MPActor extends Actor {
             let title = game.i18n.localize("MP.SavingThrow");
             if (dataset.rolltype) title = dataset.rolltype;
 
+            // TODO: Migrate to DialogV2 (Dialog is deprecated in Foundry v13+)
             let dlg = new Dialog({
                 title: title + ": " + dataset.stat,
                 content: dlgContent,
@@ -376,7 +377,7 @@ export default class MPActor extends Actor {
                 }
 
 
-                let roll = await new Roll(dataset.roll).evaluate({ async: true });
+                let roll = await new Roll(dataset.roll).evaluate();
 
                 let rollData = {
                     stat: dataset.stat,
@@ -395,7 +396,7 @@ export default class MPActor extends Actor {
                 let cardContent = await renderTemplate("systems/mighty-protectors/templates/chatcards/savingthrow.hbs", rollData);
 
                 let chatOptions = {
-                    type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+                    type: CONST.CHAT_MESSAGE_STYLES.ROLL,
                     roll: roll,
                     content: cardContent,
                     speaker: ChatMessage.getSpeaker({ actor: this })
@@ -488,7 +489,7 @@ export default class MPActor extends Actor {
 
                 if (dec > 0) {
                     let rollFormula = hpDays + "d10";
-                    roll = await new Roll(rollFormula).evaluate({ async: true });
+                    roll = await new Roll(rollFormula).evaluate();
                     for (var i = 0; i < roll.dice[0].results.length; i++) {
                         if (roll.dice[0].results[i].result <= dec) ++hpHealed;
                     }
@@ -506,7 +507,7 @@ export default class MPActor extends Actor {
                 msg += await roll.render();
                 msg += hpRecovered;
                 chatOptions = {
-                    type: CONST.CHAT_MESSAGE_TYPES.ROLL,
+                    type: CONST.CHAT_MESSAGE_STYLES.ROLL,
                     roll: roll,
                     content: msg,
                     speaker: ChatMessage.getSpeaker({ actor: this.actor })
