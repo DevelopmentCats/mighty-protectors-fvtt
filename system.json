@@ -12,6 +12,22 @@
   "styles": [
     "mighty-protectors.css"
   ],
+  "documentTypes": {
+    "Actor": {
+      "character": {},
+      "npc": {},
+      "vehicle": {}
+    },
+    "Item": {
+      "ability": {},
+      "vehiclesystem": {},
+      "attack": {},
+      "protection": {},
+      "movement": {},
+      "background": {},
+      "vehicleattack": {}
+    }
+  },
   "languages": [
     {
       "lang": "en",
@@ -32,7 +48,7 @@
   ],
   "manifest": "https://github.com/drl2/mighty-protectors-fvtt/releases/latest/download/system.json",
   "download": "https://github.com/drl2/mighty-protectors-fvtt/releases/latest/download/system.zip",
-  "primaryTokenAttribute": "health",
+  "primaryTokenAttribute": "hitpts",
   "secondaryTokenAttribute": "power",
   "compatibility": {
     "minimum": "12",

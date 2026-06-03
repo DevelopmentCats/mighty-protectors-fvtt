@@ -8,6 +8,11 @@ import MPCombat from './mpcombat.js';
 import MPCombatant from './mpcombatant.js';
 import MPCombatTracker from './mpcombattracker.js';
 import * as Macros from './macros.js';
+import { CharacterDataModel, NPCDataModel, VehicleDataModel } from './models/actor-models.js';
+import {
+    AbilityDataModel, VehicleSystemDataModel, AttackDataModel, VehicleAttackDataModel,
+    ProtectionDataModel, MovementDataModel, BackgroundDataModel
+} from './models/item-models.js';
 
 Hooks.once("init", function() {
     console.log("***** MP initializing   *********");
@@ -16,6 +21,22 @@ Hooks.once("init", function() {
 
     checkDsNSetting();
     registerSystemSettings();
+
+    // Register TypeDataModels (v14+ — replaces template.json)
+    CONFIG.Actor.dataModels = {
+        character: CharacterDataModel,
+        npc:       NPCDataModel,
+        vehicle:   VehicleDataModel
+    };
+    CONFIG.Item.dataModels = {
+        ability:        AbilityDataModel,
+        vehiclesystem:  VehicleSystemDataModel,
+        attack:         AttackDataModel,
+        vehicleattack:  VehicleAttackDataModel,
+        protection:     ProtectionDataModel,
+        movement:       MovementDataModel,
+        background:     BackgroundDataModel
+    };
 
     CONFIG.Item.documentClass = MPItem;
     CONFIG.Actor.documentClass = MPActor;
