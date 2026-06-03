@@ -189,28 +189,29 @@ export default class MPItem extends Item {
 
         let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/attackmods.hbs", dlgData);
 
-        // TODO: Migrate to DialogV2 (Dialog is deprecated in Foundry v13+)
-        let dlg = new Dialog({
-            title: game.i18n.localize("ITEM.TypeAttack") + ": " + itemName,
+        await foundry.applications.api.DialogV2.wait({
+            window: { title: game.i18n.localize("ITEM.TypeAttack") + ": " + itemName },
             content: dlgContent,
-            buttons: {
-                rollAttack: {
-                    icon: "<i class='fas fa-dice-d20'></i>",
+            buttons: [
+                {
                     label: game.i18n.localize("MP.Roll"),
-                    callback: (html) => rollAttackCallback(html)
+                    icon: "fa-solid fa-dice-d20",
+                    action: "rollAttack",
+                    default: true,
+                    callback: async (event, button, dialog) => {
+                        const html = button.form;
+                        await rollAttackCallback(html);
+                    }
                 },
-                cancel: {
-                    icon: "<i class='fas fa-times'></i>",
-                    label: game.i18n.localize("MP.Cancel")
+                {
+                    label: game.i18n.localize("MP.Cancel"),
+                    icon: "fa-solid fa-times",
+                    action: "cancel"
                 }
-            },
-            default: "rollAttack"
+            ]
         });
 
-        dlg.render(true);
-
-
-        async function rollAttackCallback(html) {
+        async function rollAttackCallback(form) {
             const sourceIsVehicle = (actor.type === "vehicle"); 
             const targetIsVehicle = (target && target.actor.type === "vehicle");
             const sourceVehicleToHit = sourceIsVehicle ? actor.system.basetohit : null;
@@ -221,9 +222,9 @@ export default class MPItem extends Item {
             
             let modToHit = itemData.tohit ? Number.parseInt(itemData.tohit) : sourceVehicleToHit;
             let mod = "";
-            let push = html.find('[name="push"]')[0].checked;
-            let spendPower = (autoPowerSetting === 'choose' && html.find('[name="autodeduct"]')[0].checked) || autoPowerSetting === 'always';
-            let spendCharges = itemData.usecharges && ((autoChargesSetting === 'choose' && html.find('[name="autodeductcharge"]')[0].checked) || autoChargesSetting === 'always' );
+            let push = form.elements.push?.checked ?? false;
+            let spendPower = (autoPowerSetting === 'choose' && (form.elements.autodeduct?.checked ?? false)) || autoPowerSetting === 'always';
+            let spendCharges = itemData.usecharges && ((autoChargesSetting === 'choose' && (form.elements.autodeductcharge?.checked ?? false)) || autoChargesSetting === 'always' );
             let dmgFormula = itemData.dmgroll;
             let powerCost = itemData.powercost;
             let showTarget = game.settings.get(game.system.id, "showAttackTargetNumbers");
@@ -272,7 +273,7 @@ export default class MPItem extends Item {
             }
             else {
                 if (targetName) {
-                    mod = html.find('[name="mod"]')[0].value.trim();
+                    mod = form.elements.mod?.value?.trim() ?? "";
                 }
 
                 if (mod != "") {

@@ -358,39 +358,37 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
 
         let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/rest.hbs", data);
 
-        // TODO: Migrate to DialogV2 (Dialog is deprecated in Foundry v13+)
-        let dlg = new Dialog({
-            title: game.i18n.localize("MP.Rest"),
+        const actor = this.actor;
+        await foundry.applications.api.DialogV2.wait({
+            window: { title: game.i18n.localize("MP.Rest") },
             content: dlgContent,
-            buttons: {
-                recoverAll: {
-                    icon: "<i class='fas fa-first-aid'></i>",
+            buttons: [
+                {
                     label: game.i18n.localize("MP.RecoverAll"),
-                    callback: (html) => rollRecoverCallback(html, this.actor)
+                    icon: "fa-solid fa-first-aid",
+                    action: "recoverAll",
+                    default: true,
+                    callback: async (event, button, dialog) => {
+                        return await actor.recoverAll();
+                    }
                 },
-                timedRest: {
-                    icon: "<i class='fas fa-bed'></i>",
+                {
                     label: game.i18n.localize("MP.TimedRest"),
-                    callback: (html) => timedRestCallback(html, this.actor)
+                    icon: "fa-solid fa-bed",
+                    action: "timedRest",
+                    callback: async (event, button, dialog) => {
+                        const healtime = button.form.elements.healtime?.value?.trim() ?? "0";
+                        const timeframe = button.form.elements.timeframe?.value?.trim() ?? "";
+                        return await actor.timedRecovery(timeframe, healtime);
+                    }
                 },
-                cancel: {
-                    icon: "<i class='fas fa-times'></i>",
-                    label: game.i18n.localize("MP.Cancel")
+                {
+                    label: game.i18n.localize("MP.Cancel"),
+                    icon: "fa-solid fa-times",
+                    action: "cancel"
                 }
-            },
-            default: "recoverAll"
-        })
-        dlg.render(true);
-
-        async function rollRecoverCallback(html, actor) {
-            return await actor.recoverAll();            
-        }
-
-        async function timedRestCallback(html, actor) {
-            let healtime = html.find('[name="healtime"]')[0].value.trim();
-            let timeframe = html.find('[name="timeframe"]')[0].value.trim();
-            return await actor.timedRecovery(timeframe, healtime);
-        }
+            ]
+        });
 
     }
 

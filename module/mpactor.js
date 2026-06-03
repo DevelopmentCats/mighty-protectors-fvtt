@@ -170,7 +170,6 @@ export default class MPActor extends Actor {
     prepareCharacterBaseAttributes(bonuses) {
         const actorData = this.system;
 
-        // TODO: get bonuses from abilities & add them in
         actorData.basecharacteristics.st.value = actorData.basecharacteristics.st.cp + bonuses.st;
         actorData.basecharacteristics.en.value = actorData.basecharacteristics.en.cp + bonuses.en;
         actorData.basecharacteristics.ag.value = actorData.basecharacteristics.ag.cp + bonuses.ag;
@@ -341,69 +340,66 @@ export default class MPActor extends Actor {
             let title = game.i18n.localize("MP.SavingThrow");
             if (dataset.rolltype) title = dataset.rolltype;
 
-            // TODO: Migrate to DialogV2 (Dialog is deprecated in Foundry v13+)
-            let dlg = new Dialog({
-                title: title + ": " + dataset.stat,
+            await foundry.applications.api.DialogV2.wait({
+                window: { title: title + ": " + dataset.stat },
                 content: dlgContent,
-                buttons: {
-                    rollSave: {
-                        icon: "<i class='fas fa-dice-d20'></i>",
+                buttons: [
+                    {
                         label: game.i18n.localize("MP.Roll"),
-                        callback: (html) => saveRollCallback(html)
+                        icon: "fa-solid fa-dice-d20",
+                        action: "rollSave",
+                        default: true,
+                        callback: async (event, button, dialog) => {
+                            let modTarget = Number.parseInt(dataset.target);
+                            let mod = button.form.elements.mod?.value?.trim() ?? "";
+                            let showTarget = game.settings.get(game.system.id, "showSaveTargetNumbers");
+
+                            if (mod !== "") {
+                                modTarget += Number.parseInt(mod);
+                            }
+
+                            if (!showTarget) {
+                                simpleGMWhisper(
+                                    ChatMessage.getSpeaker({ actor: dataset.actor }),
+                                    title + ": " + dataset.stat + ", " + game.i18n.localize("MP.Target") + " = " + modTarget + "-"
+                                );
+                            }
+
+                            const roll = await new Roll(dataset.roll).evaluate();
+
+                            const rollData = {
+                                stat: dataset.stat,
+                                formula: roll._formula,
+                                total: roll.total,
+                                target: modTarget,
+                                showTarget: showTarget,
+                                success: roll.total <= modTarget,
+                                dieFormula: roll.dice[0].formula,
+                                dieRoll: roll.dice[0].total,
+                                rollMinMax: rollMinMax(roll.dice[0].total),
+                                rolltype: dataset.rolltype
+                            };
+
+                            const cardContent = await renderTemplate(
+                                "systems/mighty-protectors/templates/chatcards/savingthrow.hbs",
+                                rollData
+                            );
+
+                            ChatMessage.create({
+                                type: CONST.CHAT_MESSAGE_STYLES.ROLL,
+                                roll: roll,
+                                content: cardContent,
+                                speaker: ChatMessage.getSpeaker({ actor: this })
+                            });
+                        }
                     },
-                    cancel: {
-                        icon: "<i class='fas fa-times'></i>",
-                        label: game.i18n.localize("MP.Cancel")
+                    {
+                        label: game.i18n.localize("MP.Cancel"),
+                        icon: "fa-solid fa-times",
+                        action: "cancel"
                     }
-                },
-                default: "rollSave"
+                ]
             });
-
-            dlg.render(true);
-
-
-            async function saveRollCallback(html) {
-                let modTarget = Number.parseInt(dataset.target);
-                let mod = html.find('[name="mod"]')[0].value.trim();
-                let showTarget = game.settings.get(game.system.id, "showSaveTargetNumbers");
-
-                if (mod != "") {
-                    modTarget += Number.parseInt(mod);
-                }
-
-                if (!showTarget) {
-                    simpleGMWhisper(ChatMessage.getSpeaker({ actor: actor }),
-                        title + ": " + dataset.stat + ", " + game.i18n.localize("MP.Target") + " = " + modTarget + "-")
-                }
-
-
-                let roll = await new Roll(dataset.roll).evaluate();
-
-                let rollData = {
-                    stat: dataset.stat,
-                    formula: roll._formula,
-                    total: roll.total,
-                    target: modTarget,
-                    showTarget: showTarget,
-                    success: roll.total <= modTarget,
-                    // only one roll on a save so no need to for-each through rolls
-                    dieFormula: roll.dice[0].formula,
-                    dieRoll: roll.dice[0].total,
-                    rollMinMax: rollMinMax(roll.dice[0].total),
-                    rolltype: dataset.rolltype
-                };
-
-                let cardContent = await renderTemplate("systems/mighty-protectors/templates/chatcards/savingthrow.hbs", rollData);
-
-                let chatOptions = {
-                    type: CONST.CHAT_MESSAGE_STYLES.ROLL,
-                    roll: roll,
-                    content: cardContent,
-                    speaker: ChatMessage.getSpeaker({ actor: this })
-                };
-
-                ChatMessage.create(chatOptions);
-            }
         }
     }
 
