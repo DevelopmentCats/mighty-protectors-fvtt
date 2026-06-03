@@ -418,7 +418,7 @@ export default class MPActor extends Actor {
     async recoverAll() {
         let chatOptions = {
             content: game.i18n.localize("MP.FullRest") + ".",
-            speaker: ChatMessage.getSpeaker({ actor: this.actor })
+            speaker: ChatMessage.getSpeaker({ actor: this })
         };
 
         ChatMessage.create(chatOptions);
@@ -506,14 +506,14 @@ export default class MPActor extends Actor {
                     type: CONST.CHAT_MESSAGE_STYLES.ROLL,
                     roll: roll,
                     content: msg,
-                    speaker: ChatMessage.getSpeaker({ actor: this.actor })
+                    speaker: ChatMessage.getSpeaker({ actor: this })
                 };
             }
             else {
                 // otherwise just a normal message
                 chatOptions = {
                     content: msg + hpRecovered,
-                    speaker: ChatMessage.getSpeaker({ actor: this.actor })
+                    speaker: ChatMessage.getSpeaker({ actor: this })
                 };
             }
 
