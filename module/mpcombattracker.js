@@ -1,56 +1,51 @@
-const { CombatTracker } = foundry.applications.sidebar.tabs;
-
 /**
- * MPCombatTracker extends the core CombatTracker (ApplicationV2-based in v13+).
- * Uses overrideConfig/static DEFAULT_OPTIONS pattern for AppV2 compatibility.
+ * MPCombatTracker extends the core CombatTracker (ApplicationV2/HandlebarsApplicationMixin in v13+).
+ *
+ * Key v14 AppV2 patterns used:
+ *  - static PARTS: override only the tracker template, preserving parent header/footer parts and
+ *    the tracker part's scrollable config via foundry.utils.mergeObject with recursive merge.
+ *  - _prepareTrackerContext: the correct hook for injecting per-combatant data in v14's CombatTracker.
+ *    (Not _prepareContext — that is the generic AppV2 entrypoint; CombatTracker delegates turn
+ *    rendering to _prepareTrackerContext → _prepareTurnContext.)
+ *  - _onRender: plain DOM querySelectorAll/addEventListener (no jQuery).
  */
-export default class MPCombatTracker extends CombatTracker {
+export default class MPCombatTracker extends foundry.applications.sidebar.tabs.CombatTracker {
 
-    /** @override */
-    static DEFAULT_OPTIONS = foundry.utils.mergeObject(
-        CombatTracker.DEFAULT_OPTIONS ?? {},
-        {
-            // No additional options needed at this level
-        },
-        { inplace: false }
-    );
-
-    /** @override */
+    /** @override — replace only the tracker part template; preserve header, footer, and scrollable. */
     static PARTS = foundry.utils.mergeObject(
-        CombatTracker.PARTS ?? {},
+        foundry.utils.deepClone(foundry.applications.sidebar.tabs.CombatTracker.PARTS),
         {
             tracker: {
                 template: "systems/mighty-protectors/templates/system/combat-tracker.hbs"
             }
         },
-        { inplace: false }
+        { inplace: false, recursive: true }
     );
 
-    /** @override */
-    async _prepareContext(options) {
-        const context = await super._prepareContext(options);
+    /**
+     * @override
+     * Inject hasMulti flag into each turn entry.
+     * _prepareTrackerContext is the correct override point in v14's CombatTracker —
+     * it populates context.turns, which we then augment.
+     */
+    async _prepareTrackerContext(context, options) {
+        await super._prepareTrackerContext(context, options);
 
-        if (!context.hasCombat) {
-            return context;
-        }
+        if (!context.combat) return;
 
-        for (let [i, combatant] of context.combat.turns.entries()) {
+        for (const [i, combatant] of context.combat.turns.entries()) {
             if (context.turns[i]) {
-                context.turns[i].hasMulti = combatant.getFlag("mighty-protectors", "hasMulti");
+                context.turns[i].hasMulti = combatant.getFlag("mighty-protectors", "hasMulti") ?? false;
             }
         }
-
-        return context;
     }
 
-    /** @override */
-    _onRender(context, options) {
-        super._onRender(context, options);
+    /** @override — wire up the add-initiative button using plain DOM (AppV2, no jQuery). */
+    async _onRender(context, options) {
+        await super._onRender(context, options);
 
-        // In AppV2, html is the element itself (not jQuery)
-        const html = this.element;
-        html.querySelectorAll('.add-initiative').forEach(el => {
-            el.addEventListener('click', this._onAddInitiative.bind(this));
+        this.element.querySelectorAll(".add-initiative").forEach(el => {
+            el.addEventListener("click", this._onAddInitiative.bind(this));
         });
     }
 
@@ -59,12 +54,12 @@ export default class MPCombatTracker extends CombatTracker {
      * @param {PointerEvent} event
      */
     async _onAddInitiative(event) {
-        const btn = event.currentTarget;
-        const li = btn.closest(".combatant");
-        const c = this.viewed.combatants.get(li.dataset.combatantId);
+        const li = event.currentTarget.closest(".combatant");
+        const combatant = this.viewed.combatants.get(li.dataset.combatantId);
+        if (!combatant) return;
 
         await this.viewed.createEmbeddedDocuments("Combatant", [
-            { tokenId: c.tokenId, hidden: false }
+            { tokenId: combatant.tokenId, hidden: false }
         ]);
     }
 }

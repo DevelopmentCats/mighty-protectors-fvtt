@@ -360,7 +360,7 @@ export default class MPActor extends Actor {
 
                             if (!showTarget) {
                                 simpleGMWhisper(
-                                    ChatMessage.getSpeaker({ actor: dataset.actor }),
+                                    ChatMessage.getSpeaker({ actor: this }),
                                     title + ": " + dataset.stat + ", " + game.i18n.localize("MP.Target") + " = " + modTarget + "-"
                                 );
                             }

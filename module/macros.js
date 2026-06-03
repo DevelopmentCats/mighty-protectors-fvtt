@@ -18,7 +18,7 @@ export function createRollItemMacro(data, slot) {
 }
 
 async function addRollItemMacro(data, slot) {
-    const item = await fromUuid(data.uuid, "Item");
+    const item = await fromUuid(data.uuid);
 
     if (item.type == "attack" || item.type == "vehicleattack") {
         // Create the macro command
@@ -50,7 +50,7 @@ async function addRollItemMacro(data, slot) {
 export function rollItemMacro(itemName) {
     const speaker = ChatMessage.getSpeaker();
     let actor;
-    if (speaker.token) actor = game.actors.tokens[speaker.token];
+    if (speaker.token) actor = canvas.tokens.get(speaker.token)?.actor;
     if (!actor) actor = game.actors.get(speaker.actor);
 
     if (!actor) { return ui.notifications.warn(game.i18n.localize("Warnings.NoActorSelected")); }
@@ -72,7 +72,7 @@ export function rollItemMacro(itemName) {
 export function rollSaveMacro(stat) {
     const speaker = ChatMessage.getSpeaker();
     let actor;
-    if (speaker.token) actor = game.actors.tokens[speaker.token];
+    if (speaker.token) actor = canvas.tokens.get(speaker.token)?.actor;
     if (!actor) actor = game.actors.get(speaker.actor);
 
     if (!actor) { return ui.notifications.warn(game.i18n.localize("Warnings.NoActorSelected")); }
@@ -123,7 +123,7 @@ export function rollSaveMacro(stat) {
 export function rollOtherMacro(stat) {
     const speaker = ChatMessage.getSpeaker();
     let actor;
-    if (speaker.token) actor = game.actors.tokens[speaker.token];
+    if (speaker.token) actor = canvas.tokens.get(speaker.token)?.actor;
     if (!actor) actor = game.actors.get(speaker.actor);
 
     if (!actor) { return ui.notifications.warn(game.i18n.localize("Warnings.NoActorSelected")); }
