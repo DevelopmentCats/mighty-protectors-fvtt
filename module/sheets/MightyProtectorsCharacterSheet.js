@@ -1,72 +1,200 @@
 import MPItem from "../mpitem.js";
 import { MP } from "../config.js";
 
-export default class MightyProtectorsCharacterSheet extends ActorSheet {
-    static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
-            classes: ["mightyprotectors", "sheet", "character"],
-            tabs: [{ navSelector: ".sheet-navigation", contentSelector: ".sheet-body", initial: "stats" }]
+const TextEditor = foundry.applications.ux.TextEditor.implementation;
+
+/**
+ * ActorSheetV2 implementation for Mighty Protectors characters, NPCs, and vehicles.
+ * @extends {foundry.applications.sheets.ActorSheetV2}
+ */
+export default class MightyProtectorsCharacterSheet extends foundry.applications.sheets.ActorSheetV2 {
+
+    static DEFAULT_OPTIONS = {
+        classes: ["mightyprotectors", "sheet", "character"],
+        position: {
+            width: 600,
+            height: 700
+        },
+        form: {
+            submitOnChange: true
+        },
+        window: {
+            resizable: true
+        }
+    };
+
+    static PARTS = {
+        sheet: {
+            template: "systems/mighty-protectors/templates/sheets/MightyProtectorsCharacter-sheet.hbs"
+        },
+        vehicle: {
+            template: "systems/mighty-protectors/templates/sheets/vehicle-sheet.hbs"
+        }
+    };
+
+    static TABS = {
+        sheet: {
+            stats: { id: "stats", group: "sheet", label: "MP.Stats" },
+            abilities: { id: "abilities", group: "sheet", label: "MP.Abilities" },
+            story: { id: "story", group: "sheet", label: "MP.Story" }
+        }
+    };
+
+    /** @override */
+    _configureRenderOptions(options) {
+        super._configureRenderOptions(options);
+        // Only render the part appropriate to the actor type
+        if (this.actor.type === "vehicle") {
+            options.parts = ["vehicle"];
+        } else {
+            options.parts = ["sheet"];
+        }
+    }
+
+    /** @override */
+    tabGroups = {
+        sheet: "stats"
+    };
+
+    /** @override */
+    async _prepareContext(options) {
+        const context = {
+            // Standard actor sheet data
+            actor: this.actor,
+            system: this.actor.system,
+            source: this.actor.system._source,
+            items: Array.from(this.actor.items),
+            editable: this.isEditable,
+            owner: this.actor.isOwner,
+            limited: this.actor.limited,
+            options: this.options,
+            cssClass: this.actor.isOwner ? "editable" : "locked",
+
+            // Enriched content
+            enrichedStory: await TextEditor.enrichHTML(this.actor.system.story ?? ""),
+
+            // Type label
+            typeAbbr: this._getTypeAbbr(),
+
+            // Tabs
+            tabs: this._getTabs()
+        };
+
+        // Prepare categorized item lists
+        this._prepareItems(context);
+
+        return context;
+    }
+
+    /** @override */
+    _onRender(context, options) {
+        super._onRender(context, options);
+
+        if (!this.isEditable) return;
+
+        const html = this.element;
+
+        // Bind event listeners using event delegation (preserving original template selectors)
+        html.querySelectorAll('.saveroll').forEach(el => {
+            el.addEventListener('click', this._onRollSave.bind(this));
+        });
+
+        html.querySelectorAll('.item-create').forEach(el => {
+            el.addEventListener('click', this._onItemCreate.bind(this));
+        });
+
+        html.querySelectorAll('.item-edit').forEach(el => {
+            el.addEventListener('click', this._onItemEdit.bind(this));
+        });
+
+        html.querySelectorAll('.item-delete').forEach(el => {
+            el.addEventListener('click', this._onItemDelete.bind(this));
+        });
+
+        html.querySelectorAll('.item-info').forEach(el => {
+            el.addEventListener('click', this._onItemInfo.bind(this));
+        });
+
+        html.querySelectorAll('.item-chat').forEach(el => {
+            el.addEventListener('click', this._onItemChat.bind(this));
+        });
+
+        html.querySelectorAll('.item-usecharge').forEach(el => {
+            el.addEventListener('click', this._onItemUseCharge.bind(this));
+        });
+
+        html.querySelectorAll('.item-resetcharges').forEach(el => {
+            el.addEventListener('click', this._onItemResetCharges.bind(this));
+        });
+
+        html.querySelectorAll('.attackroll').forEach(el => {
+            el.addEventListener('click', this._onRollAttack.bind(this));
+        });
+
+        html.querySelectorAll('.initroll').forEach(el => {
+            el.addEventListener('click', this._onRollInitiative.bind(this));
+        });
+
+        html.querySelectorAll('.genericroll').forEach(el => {
+            el.addEventListener('click', this._onRollGeneric.bind(this));
+        });
+
+        html.querySelectorAll('.timed-rest').forEach(el => {
+            el.addEventListener('click', this._onRest.bind(this));
+        });
+
+        html.querySelectorAll('.dmg-edit').forEach(el => {
+            el.addEventListener('change', this._onDamageEdit.bind(this));
+        });
+
+        html.querySelectorAll('.item-useindpower').forEach(el => {
+            el.addEventListener('click', this._onItemUseIndPower.bind(this));
+        });
+
+        html.querySelectorAll('.item-resetindpower').forEach(el => {
+            el.addEventListener('click', this._onItemResetIndPower.bind(this));
         });
     }
 
-    get template() {
-        if (this.actor.type === 'vehicle') {
-            return `systems/mighty-protectors/templates/sheets/vehicle-sheet.hbs`;
-        }
-        else {
-            return `systems/mighty-protectors/templates/sheets/MightyProtectorsCharacter-sheet.hbs`;
-        }
-    }
-
-    async getData(options) {
-        const sheetData = super.getData(options);
-        const actorData = this.actor.toObject(false);
-        sheetData.actor = actorData;
-        sheetData.system = actorData.system;
-        sheetData.enrichedStory = await TextEditor.enrichHTML(actorData.system.story, {async: true});
-
-        switch(this.actor.type) {
+    /**
+     * Get localized type abbreviation
+     * @returns {string}
+     */
+    _getTypeAbbr() {
+        switch (this.actor.type) {
             case "npc":
-                sheetData.typeAbbr = game.i18n.localize("ACTOR.TypeNpc");
-                break;
+                return game.i18n.localize("ACTOR.TypeNpc");
             case "vehicle":
-                sheetData.typeAbbr = game.i18n.localize("ACTOR.TypeVehicle");
-                break;
+                return game.i18n.localize("ACTOR.TypeVehicle");
             default:
-                sheetData.typeAbbr = game.i18n.localize("ACTOR.TypeCharacter");
+                return game.i18n.localize("ACTOR.TypeCharacter");
         }
-
-        this._prepareItems(sheetData);
-
-        return sheetData;
     }
 
-    activateListeners(html) {
-        super.activateListeners(html);
-
-        if (!this.options.editable) return;
-
-
-        // Rollable abilities.
-        html.find('.saveroll').click(this._onRollSave.bind(this));
-        html.find('.item-create').click(this._onItemCreate.bind(this));
-        html.find('.item-edit').click(this._onItemEdit.bind(this));
-        html.find('.item-delete').click(this._onItemDelete.bind(this));
-        html.find('.item-info').click(this._onItemInfo.bind(this));
-        html.find('.item-chat').click(this._onItemChat.bind(this));
-        html.find('.item-usecharge').click(this._onItemUseCharge.bind(this));
-        html.find('.item-resetcharges').click(this._onItemResetCharges.bind(this));
-        html.find('.attackroll').click(this._onRollAttack.bind(this));
-        html.find('.initroll').click(this._onRollInitiative.bind(this));
-        html.find('.genericroll').click(this._onRollGeneric.bind(this));
-        html.find('.timed-rest').click(this._onRest.bind(this));
-        html.find('.dmg-edit').change(this._onDamageEdit.bind(this));
-        html.find('.item-useindpower').click(this._onItemUseIndPower.bind(this));
-        html.find('.item-resetindpower').click(this._onItemResetIndPower.bind(this));
+    /**
+     * Prepare tab data for the template
+     * @returns {object}
+     */
+    _getTabs() {
+        const tabs = {};
+        for (const [groupId, group] of Object.entries(MightyProtectorsCharacterSheet.TABS)) {
+            tabs[groupId] = {};
+            for (const [tabId, tab] of Object.entries(group)) {
+                tabs[groupId][tabId] = {
+                    ...tab,
+                    active: this.tabGroups[groupId] === tabId,
+                    cssClass: this.tabGroups[groupId] === tabId ? "active" : ""
+                };
+            }
+        }
+        return tabs;
     }
 
-
-    _prepareItems(sheetData) {
+    /**
+     * Organize items into categorized arrays for the template
+     * @param {object} context - The render context
+     */
+    _prepareItems(context) {
         const abilities = [];
         const attacks = [];
         const protections = [];
@@ -75,68 +203,66 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
         const vehiclesystems = [];
         const vehicleattacks = [];
 
-        // iterate through items & allocate to containers
-        for (let i of sheetData.items) {
-            i.img = i.img || DEFAULT_TOKEN;
+        for (const item of context.items) {
+            // Ensure default image
+            item.img = item.img || "icons/svg/mystery-man.svg";
 
-            if (i.type === 'ability') {
-                abilities.push(i);
-            }
-
-            if (i.type === 'attack') {
-                attacks.push(i);
-            }
-
-            if (i.type === 'protection') {
-                protections.push(i);
-            }
-
-            if (i.type === 'movement') {
-                movements.push(i);
-            }
-
-            if (i.type === 'background') {
-                backgrounds.push(i);
-            }
-
-            if (i.type === 'vehiclesystem') {
-                vehiclesystems.push(i);
-            }
-
-            if (i.type === 'vehicleattack') {
-                vehicleattacks.push(i);
+            switch (item.type) {
+                case "ability":
+                    abilities.push(item);
+                    break;
+                case "attack":
+                    attacks.push(item);
+                    break;
+                case "protection":
+                    protections.push(item);
+                    break;
+                case "movement":
+                    movements.push(item);
+                    break;
+                case "background":
+                    backgrounds.push(item);
+                    break;
+                case "vehiclesystem":
+                    vehiclesystems.push(item);
+                    break;
+                case "vehicleattack":
+                    vehicleattacks.push(item);
+                    break;
             }
         }
 
-        sheetData.abilities = abilities;
-        sheetData.attacks = attacks;
-        sheetData.protections = protections;
-        sheetData.movements = movements;
-        sheetData.backgrounds = backgrounds;
-        sheetData.vehiclesystems = vehiclesystems;
-        sheetData.vehicleattacks = vehicleattacks;
+        context.abilities = abilities;
+        context.attacks = attacks;
+        context.protections = protections;
+        context.movements = movements;
+        context.backgrounds = backgrounds;
+        context.vehiclesystems = vehiclesystems;
+        context.vehicleattacks = vehicleattacks;
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Event Handlers (instance methods bound in _onRender)
+    // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * Roll a saving throw
-     * @param {*} event 
+     * @param {Event} event
      */
     async _onRollSave(event) {
         event.preventDefault();
         const element = event.currentTarget;
         const dataset = element.dataset;
-
         await this.actor.rollSave(dataset);
     }
 
     /**
      * Add an item directly to a character sheet
-     * @param {*} event 
-     * @returns 
+     * @param {Event} event
      */
     async _onItemCreate(event) {
         event.preventDefault();
-        let element = event.currentTarget;
+        const element = event.currentTarget;
         let itemName = '';
 
         switch (element.dataset.type) {
@@ -163,10 +289,10 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
                 break;
             default:
                 ui.notifications.warn('Add item with no item type defined');
-                break;
+                return;
         }
 
-        let itemData = [{
+        const itemData = [{
             name: itemName,
             type: element.dataset.type,
             img: MP.ItemTypeImages[element.dataset.type]
@@ -177,40 +303,37 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
 
     /**
      * Open item edit form from the character sheet
-     * @param {*} event 
+     * @param {Event} event
      */
     async _onItemEdit(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-
-        item.sheet.render(true);
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        if (item) item.sheet.render(true);
     }
 
     /**
      * Delete an item from the character sheet
-     * @param {*} event 
-     * @returns 
+     * @param {Event} event
      */
     async _onItemDelete(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-        return item.delete();
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        if (item) return item.delete();
     }
 
-
     /**
-     * Show "rules" value of an item in the chat.  Currently only useful for Ability type
-     * @param {*} event 
+     * Show "rules" value of an item in the chat
+     * @param {Event} event
      */
     _onItemInfo(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
         let cardContent = '';
 
         switch (element.dataset.type) {
@@ -222,25 +345,23 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
                 break;
         }
 
-        let chatOptions = {
-            content: cardContent,
-            speaker: ChatMessage.getSpeaker({ actor: this.actor })
-        };
-
-        ChatMessage.create(chatOptions);
+        if (cardContent) {
+            ChatMessage.create({
+                content: cardContent,
+                speaker: ChatMessage.getSpeaker({ actor: this.actor })
+            });
+        }
     }
-
-
 
     /**
      * Post the item description to chat
-     * @param {*} event 
+     * @param {Event} event
      */
     _onItemChat(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
         let cardContent = '';
 
         switch (element.dataset.type) {
@@ -252,156 +373,158 @@ export default class MightyProtectorsCharacterSheet extends ActorSheet {
                 break;
         }
 
-        let chatOptions = {
-            content: cardContent,
-            speaker: ChatMessage.getSpeaker({ actor: this.actor })
+        if (cardContent) {
+            ChatMessage.create({
+                content: cardContent,
+                speaker: ChatMessage.getSpeaker({ actor: this.actor })
+            });
         }
-
-        ChatMessage.create(chatOptions);
     }
-
 
     /**
      * Decrement the remaining charges on an ability that uses charges
-     * @param {*} event 
-     * @returns 
+     * @param {Event} event
      */
     async _onItemUseCharge(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-        let itemData = item.system;
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        const itemData = item.system;
 
         let used = itemData.chargesused;
         if (used > 0) { used = used - 1; }
-        itemData.chargesused = used;
         return item.update({ 'system.chargesused': used });
     }
 
     /**
-     * Reset charges on an item to full.  Reload!
-     * @param {*} event 
-     * @returns 
+     * Reset charges on an item to full
+     * @param {Event} event
      */
     async _onItemResetCharges(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-        let itemData = item.system;
-        return item.update({ 'system.chargesused': itemData.charges });
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        return item.update({ 'system.chargesused': item.system.charges });
     }
 
-
+    /**
+     * Use independent power
+     * @param {Event} event
+     */
     async _onItemUseIndPower(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-        let itemData = item.system;
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        const itemData = item.system;
 
         let used = itemData.powervalue;
         if (used > 0) { used = used - 1; }
-        itemData.chargesused = used;
         return item.update({ 'system.powervalue': used });
     }
 
     /**
-     * Reset charges on an item to full.  Reload!
-     * @param {*} event 
-     * @returns 
+     * Reset independent power to full
+     * @param {Event} event
      */
     async _onItemResetIndPower(event) {
         event.preventDefault();
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-        let itemData = item.system;
-
-        return item.update({ 'system.powervalue': itemData.powermax });
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        return item.update({ 'system.powervalue': item.system.powermax });
     }
 
     /**
-     * Roll an attack roll and its damage.  If a target is selected, use its stats to calculate hit or miss; if not, don't
-     * ask for modifiers or try to determine success; just roll d20.
-     * @param {*} event 
+     * Roll an attack
+     * @param {Event} event
      */
     async _onRollAttack(event) {
         event.preventDefault();
-        let itemId = event.currentTarget.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-
-        item.rollAttack();
+        const itemId = event.currentTarget.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        if (item) item.rollAttack();
     }
 
+    /**
+     * Roll initiative
+     * @param {Event} event
+     */
     async _onRollInitiative(event) {
         event.preventDefault();
-
         return await this.actor.rollInitiative({ createCombatants: true });
     }
 
+    /**
+     * Roll a generic roll
+     * @param {Event} event
+     */
     async _onRollGeneric(event) {
         event.preventDefault();
         const element = event.currentTarget;
         const dataset = element.dataset;
-
         await this.actor.rollGeneric(dataset);
     }
 
+    /**
+     * Handle the rest dialog
+     * @param {Event} event
+     */
     async _onRest(event) {
         event.preventDefault();
 
-        let data = {
+        const data = {
             config: MP
         };
 
-        let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/rest.hbs", data);
+        const dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/rest.hbs", data);
 
-        let dlg = new Dialog({
-            title: game.i18n.localize("MP.Rest"),
+        const actor = this.actor;
+        await foundry.applications.api.DialogV2.wait({
+            window: { title: game.i18n.localize("MP.Rest") },
             content: dlgContent,
-            buttons: {
-                recoverAll: {
-                    icon: "<i class='fas fa-first-aid'></i>",
+            buttons: [
+                {
                     label: game.i18n.localize("MP.RecoverAll"),
-                    callback: (html) => rollRecoverCallback(html, this.actor)
+                    icon: "fa-solid fa-first-aid",
+                    action: "recoverAll",
+                    default: true,
+                    callback: async (event, button, dialog) => {
+                        return await actor.recoverAll();
+                    }
                 },
-                timedRest: {
-                    icon: "<i class='fas fa-bed'></i>",
+                {
                     label: game.i18n.localize("MP.TimedRest"),
-                    callback: (html) => timedRestCallback(html, this.actor)
+                    icon: "fa-solid fa-bed",
+                    action: "timedRest",
+                    callback: async (event, button, dialog) => {
+                        const healtime = button.form.elements.healtime?.value?.trim() ?? "0";
+                        const timeframe = button.form.elements.timeframe?.value?.trim() ?? "";
+                        return await actor.timedRecovery(timeframe, healtime);
+                    }
                 },
-                cancel: {
-                    icon: "<i class='fas fa-times'></i>",
-                    label: game.i18n.localize("MP.Cancel")
+                {
+                    label: game.i18n.localize("MP.Cancel"),
+                    icon: "fa-solid fa-times",
+                    action: "cancel"
                 }
-            },
-            default: "recoverAll"
-        })
-        dlg.render(true);
-
-        async function rollRecoverCallback(html, actor) {
-            return await actor.recoverAll();            
-        }
-
-        async function timedRestCallback(html, actor) {
-            let healtime = html.find('[name="healtime"]')[0].value.trim();
-            let timeframe = html.find('[name="timeframe"]')[0].value.trim();
-            return await actor.timedRecovery(timeframe, healtime);
-        }
-
+            ]
+        });
     }
 
-
+    /**
+     * Handle damage edit input change
+     * @param {Event} event
+     */
     async _onDamageEdit(event) {
         event.preventDefault();
-
-        let element = event.currentTarget;
-        let itemId = element.closest(".item").dataset.itemId;
-        let item = this.actor.items.get(itemId);
-        return item.update({ 'data.dmg': Number(element.value) });
+        const element = event.currentTarget;
+        const itemId = element.closest(".item").dataset.itemId;
+        const item = this.actor.items.get(itemId);
+        if (item) {
+            return item.update({ 'system.dmg': Number(element.value) });
+        }
     }
 }
-
-

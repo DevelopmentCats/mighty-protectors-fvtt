@@ -33,122 +33,18 @@ export default class MPItem extends Item {
         }
     }
 
+    /**
+     * @override
+     * Item-level prepareDerivedData - just calls super which triggers TypeDataModel.prepareDerivedData()
+     * The actual derived data logic is now in the TypeDataModel classes in item-models.js
+     */
     prepareDerivedData() {
         super.prepareDerivedData();
-
-        if (this.type === 'movement') this._prepareDerivedMovementData();
-        if (this.type === 'attack') this._prepareDerivedAttackData();
-        if (this.type === 'vehiclesystem') this._prepareDerivedVehicleSystemData();
-        if (this.type === 'vehicleattack') this._prepareDerivedVehicleAttackData();
     }
 
-
-    async _prepareDerivedMovementData() {
-        const itemData = this.system;
-        const actorData = this.actor ? this.actor.system : null;
-
-        // don't bother unless the move item is attached to a character, is set to constant rate type, and not set to manual entry
-        if (itemData.moverateformula == "manual") {
-            this.system.calcmoverate = this.system.moverate;
-        }
-        else if (actorData && (itemData.moveratetype === "constant")) {
-
-            let rate = 0;
-
-            if (itemData.moverateformula === "ground") {
-                rate = (
-                    (
-                        (actorData.basecharacteristics.st.value + actorData.basecharacteristics.ag.value + actorData.basecharacteristics.en.value)
-                        / 3
-                    ) - .5
-                );
-
-                rate = Math.round(rate);
-            }
-            else if (itemData.moverateformula === "leaping") {
-                if (actorData.weight > 0) {
-                    rate = actorData.carry / actorData.weight;
-                    rate = Math.round(rate * 100) / 100;
-                }
-            }
-
-            this.system.calcmoverate = rate;
-        }
-    }
-
-    _prepareDerivedAttackData() {
-        const itemData = this.system;
-        const actorData = this.actor ? this.actor.system : null;
-
-        if (actorData) {
-
-            // first get save for appropriate stat
-            let toHit = 3;
-            switch (itemData.attribute) {
-                case "AG":
-                    toHit += actorData.basecharacteristics.ag.save;
-                    break;
-                case "IN":
-                    toHit += actorData.basecharacteristics.in.save;
-                    break;
-                case "CL":
-                    toHit += actorData.basecharacteristics.cl.save;
-                    break;
-            }
-
-            toHit += getCharAblityToHitBonus(this.actor.items, itemData.bonusids);
-            itemData.tohit = toHit;
-        }
-    }
-
-
-    _prepareDerivedVehicleAttackData() {
-        const itemData = this.system;
-        const actorData = this.actor ? this.actor.system : null;
-
-        if (actorData) {
-            // then calc selected bonuses from abilities
-            const items = this.actor.items;
-            const bonusids = itemData.bonusids;
-            let totalbonus = 0;
-
-            if (bonusids) {
-                for (let i of items) {
-                    if (i.type === 'vehiclesystem' && i.system.tohitbonus && bonusids.includes(i.id)) {
-                        totalbonus += i.system.tohitbonus;
-                    }
-                }
-            }
-          
-            itemData.tohitbonus = totalbonus;
-        }
-    }
-
-    async _prepareDerivedVehicleSystemData() {
-        const itemData = this.system;
-
-        if (itemData.systemspaces) {
-            const vehSysList = MP.VehicleSystemsTable.filter(tableRow => (tableRow.spaces <= itemData.systemspaces));
-            const vehSysData = vehSysList[vehSysList.length -1];
-
-            let cps = vehSysData.cps;
-
-            if (itemData.open) {
-                const openSysList = MP.VehicleSystemsTable.filter(tableRow => (tableRow.spaces <= itemData.systemspaces/4));
-                const openSysData = openSysList[openSysList.length -1];
-                cps = openSysData.cps;
-            }
-
-            let hitsBonus = 0;
-            hitsBonus += itemData.bulky ? Math.ceil((itemData.bulky/2.5)*4.3) : 0;
-            hitsBonus -= itemData.delicate ? Math.ceil((itemData.delicate/2.5)*4.3) : 0;
-
-            itemData.profile = vehSysData.profile;
-            itemData.hits = vehSysData.hits + hitsBonus;
-            itemData.points = itemData.integral ? Math.ceil(cps/2) : cps;
-        }
-    }
-
+    /**
+     * Roll an attack with this item
+     */
     async rollAttack() {
         const actor = this.actor;
         const itemName = this.name;
@@ -189,27 +85,29 @@ export default class MPItem extends Item {
 
         let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/attackmods.hbs", dlgData);
 
-        let dlg = new Dialog({
-            title: game.i18n.localize("ITEM.TypeAttack") + ": " + itemName,
+        await foundry.applications.api.DialogV2.wait({
+            window: { title: game.i18n.localize("ITEM.TypeAttack") + ": " + itemName },
             content: dlgContent,
-            buttons: {
-                rollAttack: {
-                    icon: "<i class='fas fa-dice-d20'></i>",
+            buttons: [
+                {
                     label: game.i18n.localize("MP.Roll"),
-                    callback: (html) => rollAttackCallback(html)
+                    icon: "fa-solid fa-dice-d20",
+                    action: "rollAttack",
+                    default: true,
+                    callback: async (event, button, dialog) => {
+                        const html = button.form;
+                        await rollAttackCallback(html);
+                    }
                 },
-                cancel: {
-                    icon: "<i class='fas fa-times'></i>",
-                    label: game.i18n.localize("MP.Cancel")
+                {
+                    label: game.i18n.localize("MP.Cancel"),
+                    icon: "fa-solid fa-times",
+                    action: "cancel"
                 }
-            },
-            default: "rollAttack"
+            ]
         });
 
-        dlg.render(true);
-
-
-        async function rollAttackCallback(html) {
+        async function rollAttackCallback(form) {
             const sourceIsVehicle = (actor.type === "vehicle"); 
             const targetIsVehicle = (target && target.actor.type === "vehicle");
             const sourceVehicleToHit = sourceIsVehicle ? actor.system.basetohit : null;
@@ -220,9 +118,9 @@ export default class MPItem extends Item {
             
             let modToHit = itemData.tohit ? Number.parseInt(itemData.tohit) : sourceVehicleToHit;
             let mod = "";
-            let push = html.find('[name="push"]')[0].checked;
-            let spendPower = (autoPowerSetting === 'choose' && html.find('[name="autodeduct"]')[0].checked) || autoPowerSetting === 'always';
-            let spendCharges = itemData.usecharges && ((autoChargesSetting === 'choose' && html.find('[name="autodeductcharge"]')[0].checked) || autoChargesSetting === 'always' );
+            let push = form.elements.push?.checked ?? false;
+            let spendPower = (autoPowerSetting === 'choose' && (form.elements.autodeduct?.checked ?? false)) || autoPowerSetting === 'always';
+            let spendCharges = itemData.usecharges && ((autoChargesSetting === 'choose' && (form.elements.autodeductcharge?.checked ?? false)) || autoChargesSetting === 'always' );
             let dmgFormula = itemData.dmgroll;
             let powerCost = itemData.powercost;
             let showTarget = game.settings.get(game.system.id, "showAttackTargetNumbers");
@@ -271,7 +169,7 @@ export default class MPItem extends Item {
             }
             else {
                 if (targetName) {
-                    mod = html.find('[name="mod"]')[0].value.trim();
+                    mod = form.elements.mod?.value?.trim() ?? "";
                 }
 
                 if (mod != "") {
@@ -301,10 +199,10 @@ export default class MPItem extends Item {
                     powerCost += 2;
                 }
 
-                let attackRoll = await new Roll("1d20").evaluate({ async: true });
+                let attackRoll = await new Roll("1d20").evaluate();
                 attackRoll.dice[0].options.rollOrder = 1;
 
-                let dmgRoll = await new Roll(dmgFormula).evaluate({ async: true });
+                let dmgRoll = await new Roll(dmgFormula).evaluate();
                 dmgRoll.dice[0].options.rollOrder = 2;
 
                 const rolls = [attackRoll, dmgRoll];
@@ -364,8 +262,8 @@ export default class MPItem extends Item {
                 let cardContent = await renderTemplate("systems/mighty-protectors/templates/chatcards/attackroll.hbs", rollData);
 
                 let chatOptions = {
-                    type: CONST.CHAT_MESSAGE_TYPES.ROLL,
-                    roll: roll,
+                    style: CONST.CHAT_MESSAGE_STYLES.ROLL,
+                    rolls: [roll],
                     content: cardContent,
                     speaker: ChatMessage.getSpeaker({ actor: actor })
                 };
@@ -385,7 +283,7 @@ export default class MPItem extends Item {
                     }
                 }
 
-                if (spendCharges && itemData.system.usecharges) {
+                if (spendCharges && itemData.usecharges) {
                     let newCharges = chargeSource.system.chargesused -1;
                     if (newCharges < 0) newCharges = 0;
                     await chargeSource.update({"system.chargesused": newCharges});

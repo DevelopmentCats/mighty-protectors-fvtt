@@ -1,3 +1,5 @@
 system.zip
 .vscode
 mighty-protectors.zip
+*.db
+template.json

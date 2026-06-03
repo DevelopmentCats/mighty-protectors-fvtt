@@ -4,13 +4,30 @@
   "description": "A FoundryVTT system implementation of Villains and Vigilantes 3 - Mighty Protectors!",
   "url": "https://github.com/drl2/mighty-protectors-fvtt",
   "license": "LICENSE.txt",
-  "version": "1.1.2",
+  "version": "1.2.0",
+  "authors": [{"name": "drl2"}],
   "esmodules": [
     "module/mighty-protectors.js"
   ],
   "styles": [
     "mighty-protectors.css"
   ],
+  "documentTypes": {
+    "Actor": {
+      "character": { "htmlFields": ["story", "motivation"] },
+      "npc":       { "htmlFields": ["story", "motivation"] },
+      "vehicle":   {}
+    },
+    "Item": {
+      "ability":       { "htmlFields": ["description", "rules"] },
+      "vehiclesystem": { "htmlFields": ["description"] },
+      "attack":        {},
+      "protection":    {},
+      "movement":      {},
+      "background":    { "htmlFields": ["description"] },
+      "vehicleattack": {}
+    }
+  },
   "languages": [
     {
       "lang": "en",
@@ -24,20 +41,17 @@
       "name": "mighty-protectors-rolltables",
       "label": "Mighty Protectors Rolltables",
       "system": "mighty-protectors",
-      "path": "packs/mighty-protectors-rolltables.db",
+      "path": "packs/mighty-protectors-rolltables",
       "type": "RollTable",
-      "private": false,
       "flags": {}
     }
   ],
-  "manifest": "https://github.com/drl2/mighty-protectors-fvtt/releases/latest/download/system.json",
-  "download": "https://github.com/drl2/mighty-protectors-fvtt/releases/latest/download/system.zip",
-  "gridDistance": 5,
-  "gridUnits": "ft",
-  "primaryTokenAttribute": "health",
+  "manifest": "https://github.com/DevelopmentCats/mighty-protectors-fvtt/releases/latest/download/system.json",
+  "download": "https://github.com/DevelopmentCats/mighty-protectors-fvtt/releases/latest/download/system.zip",
+  "primaryTokenAttribute": "hitpts",
   "secondaryTokenAttribute": "power",
   "compatibility": {
-    "minimum": 10,
-    "verified": "12"
+    "minimum": "12",
+    "verified": "14"
   }
 }

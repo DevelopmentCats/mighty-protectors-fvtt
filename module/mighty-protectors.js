@@ -8,6 +8,11 @@ import MPCombat from './mpcombat.js';
 import MPCombatant from './mpcombatant.js';
 import MPCombatTracker from './mpcombattracker.js';
 import * as Macros from './macros.js';
+import { CharacterDataModel, NPCDataModel, VehicleDataModel } from './models/actor-models.js';
+import {
+    AbilityDataModel, VehicleSystemDataModel, AttackDataModel, VehicleAttackDataModel,
+    ProtectionDataModel, MovementDataModel, BackgroundDataModel
+} from './models/item-models.js';
 
 Hooks.once("init", function() {
     console.log("***** MP initializing   *********");
@@ -17,11 +22,50 @@ Hooks.once("init", function() {
     checkDsNSetting();
     registerSystemSettings();
 
+    // Register TypeDataModels (v14+ — replaces template.json)
+    CONFIG.Actor.dataModels = {
+        character: CharacterDataModel,
+        npc:       NPCDataModel,
+        vehicle:   VehicleDataModel
+    };
+    CONFIG.Item.dataModels = {
+        ability:        AbilityDataModel,
+        vehiclesystem:  VehicleSystemDataModel,
+        attack:         AttackDataModel,
+        vehicleattack:  VehicleAttackDataModel,
+        protection:     ProtectionDataModel,
+        movement:       MovementDataModel,
+        background:     BackgroundDataModel
+    };
+
     CONFIG.Item.documentClass = MPItem;
     CONFIG.Actor.documentClass = MPActor;
     CONFIG.Combat.documentClass = MPCombat;
     CONFIG.Combatant.documentClass = MPCombatant;
     CONFIG.ui.combat = MPCombatTracker;
+
+    // Declare which fields appear as token bar options
+    CONFIG.Actor.trackableAttributes = {
+        character: {
+            bar: ["hitpts", "power"],
+            value: ["basecharacteristics.st.value", "basecharacteristics.en.value",
+                    "basecharacteristics.ag.value", "basecharacteristics.in.value",
+                    "basecharacteristics.cl.value", "physicaldefense", "mentaldefense",
+                    "luck", "clearance"]
+        },
+        npc: {
+            bar: ["hitpts", "power"],
+            value: ["basecharacteristics.st.value", "basecharacteristics.en.value",
+                    "basecharacteristics.ag.value", "basecharacteristics.in.value",
+                    "basecharacteristics.cl.value", "physicaldefense", "mentaldefense",
+                    "luck", "clearance"]
+        },
+        vehicle: {
+            bar: ["hitpts", "power"],
+            value: ["basecharacteristics.st.value", "basecharacteristics.en.value",
+                    "basecharacteristics.ag.value", "spaces", "spacesLeft"]
+        }
+    };
 
     game.mp = {
         macros: Macros,
@@ -30,11 +74,20 @@ Hooks.once("init", function() {
         rollOtherStat: Macros.rollOtherMacro
     }
 
-    Items.unregisterSheet("core", ItemSheet);
-    Items.registerSheet(game.system.id, MightyProtectorsItemSheet, {makeDefault: true });
+    // Register item sheet (V2 API)
+    const DocumentSheetConfig = foundry.applications.apps.DocumentSheetConfig;
+    DocumentSheetConfig.unregisterSheet(Item, "core", foundry.appv1.sheets.ItemSheet);
+    DocumentSheetConfig.registerSheet(Item, game.system.id, MightyProtectorsItemSheet, {
+        makeDefault: true,
+        label: "MP.ItemSheet"
+    });
 
-    Actors.unregisterSheet("core", ActorSheet);
-    Actors.registerSheet(game.system.id, MightyProtectorsCharacterSheet, {makeDefault: true });
+    // Register actor sheet (V2 API)
+    DocumentSheetConfig.unregisterSheet(Actor, "core", foundry.appv1.sheets.ActorSheet);
+    DocumentSheetConfig.registerSheet(Actor, game.system.id, MightyProtectorsCharacterSheet, {
+        makeDefault: true,
+        label: "MP.CharacterSheet"
+    });
 });
 
 Hooks.once("ready", function() {
