@@ -4,7 +4,7 @@
   "description": "A FoundryVTT system implementation of Villains and Vigilantes 3 - Mighty Protectors!",
   "url": "https://github.com/drl2/mighty-protectors-fvtt",
   "license": "LICENSE.txt",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "authors": [{"name": "drl2"}],
   "esmodules": [
     "module/mighty-protectors.js"
@@ -14,17 +14,17 @@
   ],
   "documentTypes": {
     "Actor": {
-      "character": {},
-      "npc": {},
-      "vehicle": {}
+      "character": { "htmlFields": ["story", "motivation"] },
+      "npc":       { "htmlFields": ["story", "motivation"] },
+      "vehicle":   {}
     },
     "Item": {
-      "ability": {},
-      "vehiclesystem": {},
-      "attack": {},
-      "protection": {},
-      "movement": {},
-      "background": {},
+      "ability":       { "htmlFields": ["description", "rules"] },
+      "vehiclesystem": { "htmlFields": ["description"] },
+      "attack":        {},
+      "protection":    {},
+      "movement":      {},
+      "background":    { "htmlFields": ["description"] },
       "vehicleattack": {}
     }
   },
@@ -46,8 +46,8 @@
       "flags": {}
     }
   ],
-  "manifest": "https://github.com/drl2/mighty-protectors-fvtt/releases/latest/download/system.json",
-  "download": "https://github.com/drl2/mighty-protectors-fvtt/releases/latest/download/system.zip",
+  "manifest": "https://github.com/DevelopmentCats/mighty-protectors-fvtt/releases/latest/download/system.json",
+  "download": "https://github.com/DevelopmentCats/mighty-protectors-fvtt/releases/latest/download/system.zip",
   "primaryTokenAttribute": "hitpts",
   "secondaryTokenAttribute": "power",
   "compatibility": {

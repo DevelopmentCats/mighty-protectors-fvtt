@@ -1,6 +1,8 @@
 import MPItem from "../mpitem.js";
 import { MP } from "../config.js";
 
+const TextEditor = foundry.applications.ux.TextEditor.implementation;
+
 /**
  * ActorSheetV2 implementation for Mighty Protectors characters, NPCs, and vehicles.
  * @extends {foundry.applications.sheets.ActorSheetV2}

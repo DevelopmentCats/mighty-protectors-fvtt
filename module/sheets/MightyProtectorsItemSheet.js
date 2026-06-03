@@ -1,3 +1,5 @@
+const TextEditor = foundry.applications.ux.TextEditor.implementation;
+
 /**
  * ItemSheetV2 implementation for Mighty Protectors items.
  * @extends {foundry.applications.sheets.ItemSheetV2}

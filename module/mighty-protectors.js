@@ -44,6 +44,29 @@ Hooks.once("init", function() {
     CONFIG.Combatant.documentClass = MPCombatant;
     CONFIG.ui.combat = MPCombatTracker;
 
+    // Declare which fields appear as token bar options
+    CONFIG.Actor.trackableAttributes = {
+        character: {
+            bar: ["hitpts", "power"],
+            value: ["basecharacteristics.st.value", "basecharacteristics.en.value",
+                    "basecharacteristics.ag.value", "basecharacteristics.in.value",
+                    "basecharacteristics.cl.value", "physicaldefense", "mentaldefense",
+                    "luck", "clearance"]
+        },
+        npc: {
+            bar: ["hitpts", "power"],
+            value: ["basecharacteristics.st.value", "basecharacteristics.en.value",
+                    "basecharacteristics.ag.value", "basecharacteristics.in.value",
+                    "basecharacteristics.cl.value", "physicaldefense", "mentaldefense",
+                    "luck", "clearance"]
+        },
+        vehicle: {
+            bar: ["hitpts", "power"],
+            value: ["basecharacteristics.st.value", "basecharacteristics.en.value",
+                    "basecharacteristics.ag.value", "spaces", "spacesLeft"]
+        }
+    };
+
     game.mp = {
         macros: Macros,
         rollItemMacro: Macros.rollItemMacro,
@@ -52,14 +75,15 @@ Hooks.once("init", function() {
     }
 
     // Register item sheet (V2 API)
-    DocumentSheetConfig.unregisterSheet(Item, "core", ItemSheet);
+    const DocumentSheetConfig = foundry.applications.apps.DocumentSheetConfig;
+    DocumentSheetConfig.unregisterSheet(Item, "core", foundry.appv1.sheets.ItemSheet);
     DocumentSheetConfig.registerSheet(Item, game.system.id, MightyProtectorsItemSheet, {
         makeDefault: true,
         label: "MP.ItemSheet"
     });
 
     // Register actor sheet (V2 API)
-    DocumentSheetConfig.unregisterSheet(Actor, "core", ActorSheet);
+    DocumentSheetConfig.unregisterSheet(Actor, "core", foundry.appv1.sheets.ActorSheet);
     DocumentSheetConfig.registerSheet(Actor, game.system.id, MightyProtectorsCharacterSheet, {
         makeDefault: true,
         label: "MP.CharacterSheet"

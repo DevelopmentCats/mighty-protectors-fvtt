@@ -15,10 +15,10 @@ const { fields } = foundry.data;
 export class AbilityDataModel extends foundry.abstract.TypeDataModel {
     static defineSchema() {
         return {
-            description:  new fields.StringField({ required: true, initial: "" }),
+            description:  new fields.HTMLField({ required: true, blank: true, initial: "" }),
             cpcost:       new fields.NumberField({ required: true, integer: true, initial: 0 }),
             ipcost:       new fields.NumberField({ required: true, integer: true, initial: 0 }),
-            rules:        new fields.StringField({ required: true, initial: "" }),
+            rules:        new fields.HTMLField({ required: true, blank: true, initial: "" }),
             stbonus:      new fields.NumberField({ required: true, integer: true, initial: 0 }),
             enbonus:      new fields.NumberField({ required: true, integer: true, initial: 0 }),
             agbonus:      new fields.NumberField({ required: true, integer: true, initial: 0 }),
@@ -49,7 +49,7 @@ export class VehicleSystemDataModel extends foundry.abstract.TypeDataModel {
     static defineSchema() {
         return {
             // Stored
-            description:    new fields.StringField({ required: true, initial: "" }),
+            description:    new fields.HTMLField({ required: true, blank: true, initial: "" }),
             dmg:            new fields.NumberField({ required: true, integer: true, initial: 0 }),
             cost:           new fields.NumberField({ required: true, integer: true, initial: 0 }),
             systemspaces:   new fields.NumberField({ required: true, integer: true, initial: 5 }),
@@ -281,12 +281,11 @@ export class MovementDataModel extends foundry.abstract.TypeDataModel {
 }
 
 // ─── BackgroundDataModel ─────────────────────────────────────────────────────
-// template.json has no fields defined for background — empty schema
 
 export class BackgroundDataModel extends foundry.abstract.TypeDataModel {
     static defineSchema() {
-        return {};
+        return {
+            description: new fields.HTMLField({ required: true, blank: true, initial: "" })
+        };
     }
-
-    // No prepareDerivedData needed for backgrounds - no fields
 }
