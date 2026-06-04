@@ -1,8 +1,14 @@
 import * as Crit from './crit.js';
 
+// In V14 ApplicationV2, renderChatLog/renderChatMessage pass an HTMLElement.
+// Use event delegation on the element directly.
+
 export function addChatListeners(html) {
-    html.on('click', 'button.rollforcritfumble', onRollForCrit);
-    html.on('click', 'button.rollforcritfumbletype', onRollCritFumbleType);
+    const el = html instanceof HTMLElement ? html : html[0];
+    el.addEventListener('click', event => {
+        if (event.target.closest('button.rollforcritfumble')) onRollForCrit(event);
+        if (event.target.closest('button.rollforcritfumbletype')) onRollCritFumbleType(event);
+    });
 }
 
 function onRollForCrit(event) {
@@ -18,7 +24,6 @@ function onRollForCrit(event) {
     Crit.RollForCritFumble(data);
 }
 
-
 function onRollCritFumbleType(event) {
     const card = event.currentTarget.closest(".crittype");
     const data = {
@@ -28,21 +33,19 @@ function onRollCritFumbleType(event) {
     Crit.RollCritFumbleType(data);
 }
 
+export const hideCritFumble = function(app, html, data) {
+    const el = html instanceof HTMLElement ? html : html[0];
+    if (!el) return;
 
+    const chatCard = el.querySelector(".critshowhide");
+    if (!chatCard) return;
 
-export const hideCritFumble = function (app, html, data) {
-    let chatCard = html.find(".critshowhide");   
-
-    if (chatCard.length > 0) {
-        let actor = game.actors.get(chatCard.attr("data-owner-id"));
-
-        if ((actor && !actor.isOwner)) {
-            const buttons = chatCard.find(".critshowhidebutton");
-            buttons.each((i, btn) => {
-                btn.style.display = "none";
-            });
-        }
+    const actor = game.actors.get(chatCard.dataset.ownerId);
+    if (actor && !actor.isOwner) {
+        chatCard.querySelectorAll(".critshowhidebutton").forEach(btn => {
+            btn.style.display = "none";
+        });
     }
-    
+
     return chatCard;
-}
+};
