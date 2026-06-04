@@ -2,10 +2,10 @@
   "id": "mighty-protectors",
   "title": "Villains and Vigilantes 3 - Mighty Protectors",
   "description": "A FoundryVTT system implementation of Villains and Vigilantes 3 - Mighty Protectors!",
-  "url": "https://github.com/drl2/mighty-protectors-fvtt",
+  "url": "https://github.com/DevelopmentCats/mighty-protectors-fvtt",
   "license": "LICENSE.txt",
   "version": "1.2.0",
-  "authors": [{"name": "drl2"}],
+  "authors": [{"name": "DevelopmentCats", "url": "https://github.com/DevelopmentCats"}],
   "esmodules": [
     "module/mighty-protectors.js"
   ],
