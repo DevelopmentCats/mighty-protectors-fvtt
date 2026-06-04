@@ -16,7 +16,7 @@
 
 
     {{!-- Sheet Tab Navigation --}}
-    <nav class="sheet-navigation tabs" data-group="primary">
+    <nav class="sheet-navigation tabs" data-group="sheet">
         <a class="item" data-tab="description">{{ localize 'MP.Description' }}</a>
         <a class="item" data-tab="details">{{ localize 'MP.Details' }}</a>
         <a class="item" data-tab="rules">{{ localize 'MP.Rules' }}</a>
@@ -24,7 +24,7 @@
     <section class="sheet-body">
 
         {{!-- Description Tab --}}
-        <div class="tab description" data-group="primary" data-tab="description">
+        <div class="tab description" data-group="sheet" data-tab="description">
             <div class="descgrid">
                 <div>
                     {{localize 'MP.Abbreviations.CharacterPoints'}}
@@ -42,7 +42,7 @@
 
 
         {{!-- Details Tab --}}
-        <div class="tab details" data-group="primary" data-tab="details">
+        <div class="tab details" data-group="sheet" data-tab="details">
 
             <div class="detailgrid">
                 <!-- row start -->
@@ -189,10 +189,13 @@
         </div>
 
         {{!-- Mechanics Tab --}}
-        <div class="tab rules" data-group="primary" data-tab="rules">
+        <div class="tab rules" data-group="sheet" data-tab="rules">
             <div class="ruletab">
-                <!-- {{localize 'MP.Rules'}} -->
-                {{editor enrichedRules target="system.rules" editable=editable button=true}}
+                {{#if editable}}
+                <textarea name="system.rules" class="rules-editor">{{system.rules}}</textarea>
+                {{else}}
+                <div class="editor-content">{{{enrichedRules}}}</div>
+                {{/if}}
             </div>
         </div>
 

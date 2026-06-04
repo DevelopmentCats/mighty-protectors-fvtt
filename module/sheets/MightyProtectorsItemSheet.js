@@ -33,7 +33,8 @@ export default class MightyProtectorsItemSheet extends foundry.applications.shee
     static TABS = {
         sheet: {
             description: { id: "description", group: "sheet", label: "MP.Description" },
-            details: { id: "details", group: "sheet", label: "MP.Details" }
+            details:     { id: "details",     group: "sheet", label: "MP.Details" },
+            rules:       { id: "rules",       group: "sheet", label: "MP.Rules" }
         }
     };
 
