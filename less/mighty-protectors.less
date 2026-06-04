@@ -2,9 +2,10 @@
 
 
 .mightyprotectors.sheet.character {
-    form {
+    .mp-sheet {
         display: flex;
         flex-direction: column;
+        height: 100%;
       }
 
     .rollable {
@@ -14,7 +15,7 @@
 
     .rollable:hover {
         text-shadow: 0 0 8px red;
-        color:black;
+        color: var(--color-text-emphatic, var(--color-text-primary, #111));
     }
 
 
@@ -84,17 +85,17 @@
 
         .item {
             height: 20px;
-            border-bottom: 3px solid #b5b3a4;
+            border-bottom: 3px solid var(--mp-border-soft);
         }
 
         .item.active {
             text-shadow: 0 0 10px #3a2aa6;
-            border-bottom: 3px solid #44191A;
+            border-bottom: 3px solid var(--mp-accent);
         }
 
         a:hover {
             text-shadow: 0 0 10px #3a2aa6;
-            border-bottom: 3px solid #44191A;
+            border-bottom: 3px solid var(--mp-accent);
         }
 
         .tabs {
@@ -110,6 +111,11 @@
 
     .tab {
       height: 100%;
+      display: none;
+    }
+
+    .tab.active {
+      display: block;
     }
 
     .stats {
@@ -176,7 +182,7 @@
                   }
 
                 .divider-top {
-                    border-top: 1px solid black;
+                    border-top: 1px solid var(--mp-rule);
                     margin-top: 1px;
                     margin-bottom: 1px;
                 }
@@ -233,7 +239,7 @@
             }
 
             .item-header {
-                background-color: lightgray;
+                background-color: var(--mp-fill-subtle);
             }
 
 
@@ -396,7 +402,7 @@
             }
 
             .divider-top {
-                border-top: 1px solid black;
+                border-top: 1px solid var(--mp-rule);
                 margin-top: 1px;
                 margin-bottom: 1px;
             }
@@ -461,7 +467,7 @@
             }
 
             .item-header {
-                background-color: lightgray;
+                background-color: var(--mp-fill-subtle);
             }
 
             .background-col {

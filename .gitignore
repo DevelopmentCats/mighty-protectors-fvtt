@@ -3,3 +3,5 @@ system.zip
 mighty-protectors.zip
 *.db
 template.json
+node_modules
+package-lock.json

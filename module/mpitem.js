@@ -83,7 +83,7 @@ export default class MPItem extends Item {
             showDeductCharges: autoChargesSetting === "choose"
         };
 
-        let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/attackmods.hbs", dlgData);
+        let dlgContent = await foundry.applications.handlebars.renderTemplate("systems/mighty-protectors/templates/dialogs/attackmods.hbs", dlgData);
 
         await foundry.applications.api.DialogV2.wait({
             window: { title: game.i18n.localize("ITEM.TypeAttack") + ": " + itemName },
@@ -259,7 +259,7 @@ export default class MPItem extends Item {
 
 
 
-                let cardContent = await renderTemplate("systems/mighty-protectors/templates/chatcards/attackroll.hbs", rollData);
+                let cardContent = await foundry.applications.handlebars.renderTemplate("systems/mighty-protectors/templates/chatcards/attackroll.hbs", rollData);
 
                 let chatOptions = {
                     style: CONST.CHAT_MESSAGE_STYLES.ROLL,

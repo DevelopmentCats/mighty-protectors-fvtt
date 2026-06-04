@@ -1,0 +1,15 @@
+{
+  "name": "mighty-protectors-fvtt",
+  "private": true,
+  "description": "Build tooling for the Villains & Vigilantes 3: Mighty Protectors system for Foundry VTT.",
+  "scripts": {
+    "build:css": "lessc less/mighty-protectors.less mighty-protectors.css",
+    "watch:css": "gulp",
+    "build": "npm run build:css"
+  },
+  "devDependencies": {
+    "gulp": "^5.0.0",
+    "gulp-less": "^5.0.0",
+    "less": "^4.2.0"
+  }
+}

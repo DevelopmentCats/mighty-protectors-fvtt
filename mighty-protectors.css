@@ -1,4 +1,20 @@
 /* global colors */
+/*
+ * Theme-aware design tokens (Foundry v13+).
+ * These resolve against the active sheet text color (currentColor) so borders and
+ * subtle fills stay legible on both the light and dark Foundry UI themes, without
+ * forcing the sheet to a fixed background. --mp-accent gets a brighter value under
+ * the dark theme so the active-tab underline remains visible.
+ */
+:root {
+  --mp-accent: #7a2530;
+  --mp-rule: color-mix(in srgb, currentColor 30%, transparent);
+  --mp-border-soft: color-mix(in srgb, currentColor 25%, transparent);
+  --mp-fill-subtle: color-mix(in srgb, currentColor 12%, transparent);
+}
+.themed.theme-dark {
+  --mp-accent: #d8434f;
+}
 /* ----------------------------------------- */
 /*  Flexbox                                  */
 /* ----------------------------------------- */
@@ -48,16 +64,17 @@
   /* sheet navigation */
   /* sheet body */
 }
-.mightyprotectors.sheet.item form {
+.mightyprotectors.sheet.item .mp-sheet {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .mightyprotectors.sheet.item .rollable {
   cursor: pointer;
 }
 .mightyprotectors.sheet.item .rollable:hover {
   text-shadow: 0 0 8px red;
-  color: black;
+  color: var(--color-text-emphatic, var(--color-text-primary, #111));
 }
 .mightyprotectors.sheet.item .sheet-header {
   flex: 0;
@@ -77,15 +94,15 @@
 }
 .mightyprotectors.sheet.item .sheet-navigation .item {
   height: 20px;
-  border-bottom: 3px solid #b5b3a4;
+  border-bottom: 3px solid var(--mp-border-soft);
 }
 .mightyprotectors.sheet.item .sheet-navigation .item.active {
   text-shadow: 0 0 10px #3a2aa6;
-  border-bottom: 3px solid #44191A;
+  border-bottom: 3px solid var(--mp-accent);
 }
 .mightyprotectors.sheet.item .sheet-navigation a:hover {
   text-shadow: 0 0 10px #3a2aa6;
-  border-bottom: 3px solid #44191A;
+  border-bottom: 3px solid var(--mp-accent);
 }
 .mightyprotectors.sheet.item .sheet-navigation .tabs {
   height: 50px;
@@ -100,6 +117,10 @@
 }
 .mightyprotectors.sheet.item .sheet-body .tab {
   height: 100%;
+  display: none;
+}
+.mightyprotectors.sheet.item .sheet-body .tab.active {
+  display: block;
 }
 .mightyprotectors.sheet.item .sheet-body .description .descgrid {
   display: grid;
@@ -150,7 +171,7 @@
 }
 .mightyprotectors.sheet.item .sheet-body .details .detailgrid .separator {
   margin-right: 8px;
-  border-right: 2px solid silver;
+  border-right: 2px solid var(--mp-border-soft);
 }
 .mightyprotectors.sheet.item .sheet-body .details .detailgrid input[type="number"] {
   width: 40px;
@@ -159,13 +180,13 @@
 .mightyprotectors.sheet.item .sheet-body .details .detailgrid .colheader1 {
   grid-column: 1 / span 2;
   align-items: center;
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid var(--mp-rule);
   margin-bottom: 3px;
 }
 .mightyprotectors.sheet.item .sheet-body .details .detailgrid .colheader2 {
   grid-column: 3 / span 4;
   align-items: center;
-  border-bottom: 1px solid gray;
+  border-bottom: 1px solid var(--mp-rule);
   margin-bottom: 3px;
 }
 .mightyprotectors.sheet.item .sheet-body .rules .ruletab {
@@ -263,16 +284,17 @@
   text-decoration: underline;
 }
 .mightyprotectors.sheet.item .sheet-body .bonus-side-by-side .bonus-grid .item-header {
-  background-color: lightgray;
+  background-color: var(--mp-fill-subtle);
 }
 .mightyprotectors.sheet.character {
   /*  Sheet header */
   /* sheet navigation */
   /* sheet body */
 }
-.mightyprotectors.sheet.character form {
+.mightyprotectors.sheet.character .mp-sheet {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .mightyprotectors.sheet.character .rollable {
   cursor: pointer;
@@ -280,7 +302,7 @@
 }
 .mightyprotectors.sheet.character .rollable:hover {
   text-shadow: 0 0 8px red;
-  color: black;
+  color: var(--color-text-emphatic, var(--color-text-primary, #111));
 }
 .mightyprotectors.sheet.character .roll-image {
   height: 24px;
@@ -333,15 +355,15 @@
 }
 .mightyprotectors.sheet.character .sheet-navigation .item {
   height: 20px;
-  border-bottom: 3px solid #b5b3a4;
+  border-bottom: 3px solid var(--mp-border-soft);
 }
 .mightyprotectors.sheet.character .sheet-navigation .item.active {
   text-shadow: 0 0 10px #3a2aa6;
-  border-bottom: 3px solid #44191A;
+  border-bottom: 3px solid var(--mp-accent);
 }
 .mightyprotectors.sheet.character .sheet-navigation a:hover {
   text-shadow: 0 0 10px #3a2aa6;
-  border-bottom: 3px solid #44191A;
+  border-bottom: 3px solid var(--mp-accent);
 }
 .mightyprotectors.sheet.character .sheet-navigation .tabs {
   height: 50px;
@@ -353,6 +375,10 @@
 }
 .mightyprotectors.sheet.character .sheet-body .tab {
   height: 100%;
+  display: none;
+}
+.mightyprotectors.sheet.character .sheet-body .tab.active {
+  display: block;
 }
 .mightyprotectors.sheet.character .sheet-body .stats .stat-outer-grid {
   display: grid;
@@ -412,7 +438,7 @@
   text-align: center;
 }
 .mightyprotectors.sheet.character .sheet-body .stats .stat-outer-grid .cp-grid .divider-top {
-  border-top: 1px solid black;
+  border-top: 1px solid var(--mp-rule);
   margin-top: 1px;
   margin-bottom: 1px;
 }
@@ -456,7 +482,7 @@
   text-decoration: underline;
 }
 .mightyprotectors.sheet.character .sheet-body .stats .stat-outer-grid .item-header {
-  background-color: lightgray;
+  background-color: var(--mp-fill-subtle);
 }
 .mightyprotectors.sheet.character .sheet-body .stats .stat-outer-grid .item-list {
   align-items: center;
@@ -582,7 +608,7 @@
   margin-left: auto;
 }
 .mightyprotectors.sheet.character .sheet-body .stats .stat-outer-grid .divider-top {
-  border-top: 1px solid black;
+  border-top: 1px solid var(--mp-rule);
   margin-top: 1px;
   margin-bottom: 1px;
 }
@@ -627,7 +653,7 @@
   text-decoration: underline;
 }
 .mightyprotectors.sheet.character .sheet-body .bio .backgrounds-grid .item-header {
-  background-color: lightgray;
+  background-color: var(--mp-fill-subtle);
 }
 .mightyprotectors.sheet.character .sheet-body .bio .backgrounds-grid .background-col {
   flex: 0 0 180px;
@@ -639,63 +665,4 @@
 }
 .mightyprotectors.sheet.character .sheet-body .story .editor {
   height: 90%;
-}
-
-/* ─── ApplicationV2 compatibility ─────────────────────────────────────────── */
-
-/* Hide inactive tab panels - V14 ApplicationV2 adds 'active' class via JS */
-.mightyprotectors [data-tab]:not(.active) {
-    display: none;
-}
-
-/* window-part sections (ApplicationV2 wraps each PART in a section) must
-   fill the window-content area and pass height down to the form */
-.mightyprotectors.sheet.character .window-content,
-.mightyprotectors.sheet.item .window-content {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 0;
-}
-
-.mightyprotectors.sheet.character section[data-part],
-.mightyprotectors.sheet.item section[data-part] {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-}
-
-.mightyprotectors.sheet.character section[data-part] > form,
-.mightyprotectors.sheet.item section[data-part] > form {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-    height: 100%;
-}
-
-/* Sheet body must scroll within the flex column */
-.mightyprotectors.sheet.character .sheet-body,
-.mightyprotectors.sheet.item .sheet-body {
-    flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-}
-
-/* Active tab panels must actually display */
-.mightyprotectors .tab.active {
-    display: block;
-}
-
-/* Story / rules textareas fill their tab */
-.mightyprotectors .story-editor,
-.mightyprotectors .rules-editor {
-    width: 100%;
-    min-height: 300px;
-    height: calc(100% - 8px);
-    resize: vertical;
-    box-sizing: border-box;
 }

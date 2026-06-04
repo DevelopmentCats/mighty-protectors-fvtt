@@ -235,7 +235,7 @@ export default class MPActor extends Actor {
      */
     async rollSave(dataset) {
         if (dataset.roll) {
-            let dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/modifiers.hbs", dataset);
+            let dlgContent = await foundry.applications.handlebars.renderTemplate("systems/mighty-protectors/templates/dialogs/modifiers.hbs", dataset);
             let title = game.i18n.localize("MP.SavingThrow");
             if (dataset.rolltype) title = dataset.rolltype;
 
@@ -268,7 +268,7 @@ export default class MPActor extends Actor {
 
                             const rollData = {
                                 stat: dataset.stat,
-                                formula: roll._formula,
+                                formula: roll.formula,
                                 total: roll.total,
                                 target: modTarget,
                                 showTarget: showTarget,
@@ -279,7 +279,7 @@ export default class MPActor extends Actor {
                                 rolltype: dataset.rolltype
                             };
 
-                            const cardContent = await renderTemplate(
+                            const cardContent = await foundry.applications.handlebars.renderTemplate(
                                 "systems/mighty-protectors/templates/chatcards/savingthrow.hbs",
                                 rollData
                             );

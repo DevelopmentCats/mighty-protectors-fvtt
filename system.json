@@ -4,7 +4,7 @@
   "description": "A FoundryVTT system implementation of Villains and Vigilantes 3 - Mighty Protectors!",
   "url": "https://github.com/DevelopmentCats/mighty-protectors-fvtt",
   "license": "LICENSE.txt",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "authors": [{"name": "DevelopmentCats", "url": "https://github.com/DevelopmentCats"}],
   "esmodules": [
     "module/mighty-protectors.js"
@@ -53,5 +53,9 @@
   "compatibility": {
     "minimum": "12",
     "verified": "14"
+  },
+  "hotReload": {
+    "extensions": ["css", "hbs", "json"],
+    "paths": ["mighty-protectors.css", "templates", "lang"]
   }
 }

@@ -4,7 +4,7 @@ var less = require('gulp-less');
 
 gulp.task('less', function(cb) {
   gulp
-    .src('less/mightyprotectors.less')
+    .src('less/mighty-protectors.less')
     .pipe(less())
     .pipe(
       gulp.dest("./"));

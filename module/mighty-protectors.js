@@ -104,7 +104,7 @@ Hooks.once("ready", function() {
 });
 
 Hooks.on("renderChatLog", (app, html, data) => Chat.addChatListeners(html));
-Hooks.on("renderChatMessage", (app, html, data) => Chat.hideCritFumble(app, html, data));
+Hooks.on("renderChatMessageHTML", (app, html, data) => Chat.hideCritFumble(app, html, data));
 
 
 function checkDsNSetting() {

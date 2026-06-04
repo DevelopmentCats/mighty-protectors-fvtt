@@ -31,7 +31,7 @@ export async function RollForCritFumble(data) {
         owner: data.owner.id
     };
 
-    let cardContent = await renderTemplate(messageTemplate, rollData);
+    let cardContent = await foundry.applications.handlebars.renderTemplate(messageTemplate, rollData);
 
     let messageData = {
         style: CONST.CHAT_MESSAGE_STYLES.ROLL,

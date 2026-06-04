@@ -2,6 +2,24 @@
 /* global colors */
 @header-backcolor: darkslategrey;
 
+/*
+ * Theme-aware design tokens (Foundry v13+).
+ * These resolve against the active sheet text color (currentColor) so borders and
+ * subtle fills stay legible on both the light and dark Foundry UI themes, without
+ * forcing the sheet to a fixed background. --mp-accent gets a brighter value under
+ * the dark theme so the active-tab underline remains visible.
+ */
+:root {
+    --mp-accent: #7a2530;
+    --mp-rule: color-mix(in srgb, currentColor 30%, transparent);
+    --mp-border-soft: color-mix(in srgb, currentColor 25%, transparent);
+    --mp-fill-subtle: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.themed.theme-dark {
+    --mp-accent: #d8434f;
+}
+
 
 /* ----------------------------------------- */
 /*  Flexbox                                  */

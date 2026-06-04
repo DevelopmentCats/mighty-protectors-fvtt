@@ -90,9 +90,13 @@ export default class MightyProtectorsCharacterSheet extends foundry.applications
     _onRender(context, options) {
         super._onRender(context, options);
 
-        if (!this.isEditable) return;
-
         const html = this.element;
+
+        // Tab switching (ApplicationV2 — self-contained, plain DOM). Done before the
+        // editable check so observers/limited viewers can still navigate tabs.
+        this._activateTabs(html);
+
+        if (!this.isEditable) return;
 
         // Bind event listeners using event delegation (preserving original template selectors)
         html.querySelectorAll('.saveroll').forEach(el => {
@@ -188,6 +192,39 @@ export default class MightyProtectorsCharacterSheet extends foundry.applications
             }
         }
         return tabs;
+    }
+
+    /**
+     * Wire up tab navigation for ApplicationV2 sheets.
+     * Group-agnostic: reads each `nav.tabs[data-group]`, toggles `.active` on the matching
+     * nav links and `.sheet-body .tab[data-group=...]` panels, and persists the choice in
+     * `this.tabGroups` so it survives re-renders. CSS hides inactive `.tab` panels.
+     * @param {HTMLElement} html - The rendered sheet element
+     */
+    _activateTabs(html) {
+        html.querySelectorAll("nav.tabs[data-group]").forEach(nav => {
+            const group = nav.dataset.group;
+            const links = Array.from(nav.querySelectorAll("[data-tab]"));
+            const panels = Array.from(html.querySelectorAll(`.sheet-body .tab[data-group="${group}"]`));
+            if (!links.length) return;
+
+            const ids = links.map(l => l.dataset.tab);
+            let active = this.tabGroups?.[group];
+            if (!ids.includes(active)) active = ids[0];
+
+            const apply = tab => {
+                if (this.tabGroups) this.tabGroups[group] = tab;
+                links.forEach(l => l.classList.toggle("active", l.dataset.tab === tab));
+                panels.forEach(p => p.classList.toggle("active", p.dataset.tab === tab));
+            };
+
+            links.forEach(l => l.addEventListener("click", ev => {
+                ev.preventDefault();
+                apply(l.dataset.tab);
+            }));
+
+            apply(active);
+        });
     }
 
     /**
@@ -479,7 +516,7 @@ export default class MightyProtectorsCharacterSheet extends foundry.applications
             config: MP
         };
 
-        const dlgContent = await renderTemplate("systems/mighty-protectors/templates/dialogs/rest.hbs", data);
+        const dlgContent = await foundry.applications.handlebars.renderTemplate("systems/mighty-protectors/templates/dialogs/rest.hbs", data);
 
         const actor = this.actor;
         await foundry.applications.api.DialogV2.wait({
