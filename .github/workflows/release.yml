@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+
+      - name: Stamp version into system.json
+        run: |
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v' system.json \
+            > system.json.tmp && mv system.json.tmp system.json
+
+      - name: Build system.zip
+        run: |
+          zip -r system.zip . \
+            --exclude ".git/*" \
+            --exclude ".github/*" \
+            --exclude "*.md" \
+            --exclude "*.lock" \
+            --exclude "gulpfile.js" \
+            --exclude "less/*" \
+            --exclude "doc-images/*" \
+            --exclude "packs/mighty-protectors-rolltables/*.ldb" \
+            --exclude "packs/mighty-protectors-rolltables/LOG*" \
+            --exclude "packs/mighty-protectors-rolltables/LOCK" \
+            --exclude "packs/mighty-protectors-rolltables/CURRENT" \
+            --exclude "packs/mighty-protectors-rolltables/MANIFEST*"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: |
+            Install or update in Foundry VTT using this manifest URL:
+            `https://github.com/DevelopmentCats/mighty-protectors-fvtt/releases/latest/download/system.json`
+          files: |
+            system.json
+            system.zip
