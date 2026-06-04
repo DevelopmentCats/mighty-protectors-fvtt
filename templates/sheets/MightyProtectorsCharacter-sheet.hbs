@@ -49,7 +49,7 @@
     </header>
 
     {{!-- Sheet Tab Navigation --}}
-    <nav class="sheet-navigation tabs" data-group="primary">
+    <nav class="sheet-navigation tabs" data-group="sheet">
         <a class="item" data-tab="stats">{{ localize 'MP.Stats' }}</a>
         <a class="item" data-tab="bio">{{ localize 'MP.Bio' }}</a>
         <a class="item" data-tab="story">{{ localize 'MP.Story' }}</a>
@@ -57,7 +57,7 @@
 
     <section class="sheet-body">
         {{!-- Stats Tab --}}
-        <div class="tab stats" data-group="primary" data-tab="stats">
+        <div class="tab stats" data-group="sheet" data-tab="stats">
             <div class="stat-outer-grid">
                 <div>
                     <div class="bc-grid">
@@ -391,7 +391,7 @@
         </div>
 
         {{!-- Bio Tab --}}
-        <div class="tab" data-group="primary" data-tab="bio">
+        <div class="tab" data-group="sheet" data-tab="bio">
             <div class="bio">
                 <div class="bio-grid">
                     <!-- row 1 -->
@@ -538,8 +538,12 @@
         </div>
 
         {{!-- Story Tab --}}
-        <div class="tab story" data-group="primary" data-tab="story">
-            {{editor enrichedStory target="system.story" button=true editable=editable}}
+        <div class="tab story" data-group="sheet" data-tab="story">
+            {{#if editable}}
+            <textarea name="system.story" class="story-editor">{{system.story}}</textarea>
+            {{else}}
+            <div class="editor-content">{{{enrichedStory}}}</div>
+            {{/if}}
         </div>
 
 

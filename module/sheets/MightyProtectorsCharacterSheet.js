@@ -35,7 +35,7 @@ export default class MightyProtectorsCharacterSheet extends foundry.applications
     static TABS = {
         sheet: {
             stats: { id: "stats", group: "sheet", label: "MP.Stats" },
-            abilities: { id: "abilities", group: "sheet", label: "MP.Abilities" },
+            bio:   { id: "bio",   group: "sheet", label: "MP.Bio" },
             story: { id: "story", group: "sheet", label: "MP.Story" }
         }
     };
